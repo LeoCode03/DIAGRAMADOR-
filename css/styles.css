@@ -36,6 +36,7 @@ header {
     width: 100%;
     z-index: 1000;
     box-shadow: var(--shadow);
+    height: 60px; /* Altura fija del header */
 }
 
 .header-icon {
@@ -45,11 +46,127 @@ header {
     vertical-align: middle;
 }
 
+/* Controles del diagrama en el header */
+#header-diagram-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#header-diagram-controls input {
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#header-diagram-controls button {
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+#header-diagram-controls button img {
+    vertical-align: middle;
+}
+
+/* ==========================================
+   MENÚ LATERAL IZQUIERDO
+   ========================================== */
+.sidebar-menu {
+    position: fixed;
+    top: 60px; /* Pegado al header (sin espacio) */
+    left: -300px; /* Oculto inicialmente */
+    width: 300px;
+    height: calc(100vh - 120px); /* Altura desde header hasta footer (60px header + 60px footer) */
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+    z-index: 1200; /* Por encima del contenido pero debajo del header */
+    transition: left 0.3s ease;
+    overflow-y: auto;
+}
+
+.sidebar-menu.open {
+    left: 0; /* Mostrar menú */
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-close-btn {
+    width: 35px !important;
+    height: 35px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.sidebar-content {
+    padding: 20px;
+}
+
+.sidebar-section {
+    margin-bottom: 30px;
+}
+
+.nodes-container {
+    min-height: 200px;
+    border: 2px dashed rgba(255,255,255,0.2);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+/* Botón para abrir el menú */
+.sidebar-toggle-btn {
+    position: fixed;
+    top: 70px; /* Debajo del header de 60px + 10px de margen */
+    left: 20px;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    z-index: 1300; /* Por encima del menú */
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center !important;
+    justify-content: center !important;
+    background: white !important;
+    transition: var(--transition);
+}
+
+.sidebar-toggle-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.sidebar-toggle-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .sidebar-menu {
+        width: 280px;
+        left: -280px;
+    }
+    
+    .sidebar-toggle-btn {
+        width: 45px !important;
+        height: 45px !important;
+        left: 15px;
+    }
+}
+
 /* ==========================================
    VISTAS PRINCIPALES
    ========================================== */
 .main-view {
-    padding-top: 70px; /* Espacio para el header fijo */
+    padding-top: 60px; /* Espacio para el header fijo */
     min-height: 100vh;
 }
 

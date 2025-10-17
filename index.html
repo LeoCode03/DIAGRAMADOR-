@@ -21,13 +21,46 @@
             <img src="assets/icons/diagrama-flujo.svg" alt="Diagrama de Flujo" class="header-icon">
             <span class="w3-text-dark-grey w3-large"><strong>DIAGRAMADOR DE FLUJO</strong></span>
         </div>
-        <!-- Botón Hogar - Solo visible en vista canvas -->
-        <div class="w3-right w3-hide" id="header-home-container">
+        <!-- Controles del diagrama - Solo visible en vista canvas -->
+        <div class="w3-right w3-hide" id="header-diagram-controls">
+            <!-- Campo para nombre del diagrama -->
+            <input id="diagram-name-input" type="text" class="w3-input w3-border" placeholder="Nombre del diagrama" 
+                   style="width: 200px; height: 35px; margin: 8px 5px; display: inline-block;" value="Nuevo Diagrama">
+            <!-- Botón Descargar -->
+            <button id="download-btn" class="w3-bar-item w3-button w3-hover-light-grey" aria-label="Descargar diagrama" title="Descargar diagrama">
+                <img src="assets/icons/descargar.svg" alt="Descargar" style="width: 20px; height: 20px; margin-right: 5px;">
+                Descargar
+            </button>
+            <!-- Botón Hogar -->
             <button id="header-home-btn" class="w3-bar-item w3-button w3-hover-light-grey" aria-label="Ir al inicio" title="Volver al inicio">
                 <img src="assets/icons/hogar.svg" alt="Hogar" style="width: 24px; height: 24px;">
             </button>
         </div>
     </header>
+
+    <!-- Menú Lateral Izquierdo -->
+    <div id="sidebar-menu" class="sidebar-menu">
+        <div class="sidebar-header">
+            <h4 class="w3-text-white w3-margin-small">Herramientas</h4>
+            <button id="sidebar-close-btn" class="sidebar-close-btn w3-button w3-hover-red" aria-label="Cerrar menú">
+                <img src="assets/icons/cerrar.svg" alt="Cerrar menú" style="width: 20px; height: 20px;">
+            </button>
+        </div>
+        <div class="sidebar-content">
+            <div class="sidebar-section">
+                <h5 class="w3-text-light-grey w3-margin-small">Nodos</h5>
+                <div class="nodes-container">
+                    <!-- Los iconos de nodos se agregarán aquí en el futuro -->
+                    <p class="w3-text-grey w3-center w3-padding">Próximamente: Iconos de nodos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón para abrir el menú lateral - Solo visible en canvas -->
+    <button id="sidebar-toggle-btn" class="sidebar-toggle-btn w3-button w3-hover-light-grey w3-hide" aria-label="Abrir menú de herramientas" title="Herramientas">
+        <img src="assets/icons/menu.svg" alt="Abrir menú" class="sidebar-toggle-icon">
+    </button>
 
     <!-- Vista Principal: Pantalla de Inicio -->
     <div id="home-view" class="main-view w3-container w3-center">
@@ -41,6 +74,17 @@
                     <img src="assets/icons/agregar.svg" alt="Agregar diagrama" class="add-icon">
                 </button>
                 <p class="w3-text-grey w3-margin-top">Haz clic para crear tu primer diagrama</p>
+            </div>
+
+            <!-- Lista de diagramas recientes -->
+            <div id="recent-diagrams" class="w3-margin-top w3-hide">
+                <h4 class="w3-text-grey">Diagramas Recientes</h4>
+                <div id="recent-diagrams-list" class="w3-left-align" style="max-width: 600px; margin: 0 auto;">
+                    <!-- Los diagramas recientes se cargarán aquí -->
+                </div>
+                <div class="w3-margin-top">
+                    <button id="view-all-diagrams" class="w3-button w3-blue w3-round">Ver Todos los Diagramas</button>
+                </div>
             </div>
         </div>
     </div>

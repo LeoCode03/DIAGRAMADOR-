@@ -53,8 +53,13 @@ class StorageManager {
      */
     async saveDiagram(diagramData) {
         try {
+            console.log('Storage: saveDiagram called with:', diagramData);
+            
+            const diagramId = diagramData.id && diagramData.id !== 'new' ? diagramData.id : this.generateId();
+            console.log('Generated/using diagram ID:', diagramId);
+            
             const diagram = {
-                _id: diagramData.id || this.generateId(),
+                _id: diagramId,
                 name: diagramData.name || `Diagrama ${new Date().toLocaleDateString()}`,
                 elements: diagramData.elements || [],
                 metadata: {
@@ -69,22 +74,30 @@ class StorageManager {
                 }
             };
 
+            console.log('Diagram object to save:', diagram);
+
             // Si es una actualización, obtener la revisión actual
-            if (diagram._id && diagram._id !== 'new') {
+            if (diagramData._id && diagramData._rev) {
+                diagram._rev = diagramData._rev;
+                console.log('Using existing revision:', diagramData._rev);
+            } else {
                 try {
                     const existing = await this.db.get(diagram._id);
                     diagram._rev = existing._rev;
+                    diagram.metadata.created = existing.metadata.created; // Preservar fecha de creación
+                    console.log('Found existing diagram, using revision:', existing._rev);
                 } catch (e) {
-                    // El documento no existe, crear uno nuevo
+                    console.log('New diagram, no existing revision found');
                 }
             }
 
             const result = await this.db.put(diagram);
+            console.log('PouchDB put result:', result);
             
             // Actualizar diagrama actual
             this.currentDiagram = { ...diagram, _rev: result.rev };
             
-            console.log('Diagrama guardado:', result.id);
+            console.log('Diagrama guardado exitosamente:', result.id);
             
             // Guardar referencia en localStorage para acceso rápido
             this.saveToLocalStorage('lastDiagram', diagram._id);
@@ -119,10 +132,13 @@ class StorageManager {
      */
     async getAllDiagrams() {
         try {
+            console.log('Getting all diagrams from PouchDB...');
             const result = await this.db.allDocs({
                 include_docs: true,
                 descending: true // Más recientes primero
             });
+
+            console.log('Raw PouchDB result:', result);
 
             const diagrams = result.rows.map(row => ({
                 id: row.doc._id,
@@ -131,6 +147,8 @@ class StorageManager {
                 modified: row.doc.metadata.modified,
                 elementsCount: row.doc.elements.length
             }));
+
+            console.log('Processed diagrams:', diagrams);
 
             return { success: true, data: diagrams };
             

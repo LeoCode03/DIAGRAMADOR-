@@ -530,6 +530,30 @@ class DiagramCanvas {
     getZoomPercentage() {
         return Math.round(this.state.scale * 100);
     }
+
+    /**
+     * Obtiene el elemento SVG principal para descarga
+     */
+    getSVG() {
+        return this.svg;
+    }
+
+    /**
+     * Obtiene la escala actual del canvas
+     */
+    getScale() {
+        return this.state.scale;
+    }
+
+    /**
+     * Obtiene la traslación actual del canvas
+     */
+    getTranslation() {
+        return {
+            x: this.state.translateX,
+            y: this.state.translateY
+        };
+    }
 }
 
 /**

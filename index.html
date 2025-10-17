@@ -21,6 +21,12 @@
             <img src="assets/icons/diagrama-flujo.svg" alt="Diagrama de Flujo" class="header-icon">
             <span class="w3-text-dark-grey w3-large"><strong>DIAGRAMADOR DE FLUJO</strong></span>
         </div>
+        <!-- Botón Hogar - Solo visible en vista canvas -->
+        <div class="w3-right w3-hide" id="header-home-container">
+            <button id="header-home-btn" class="w3-bar-item w3-button w3-hover-light-grey" aria-label="Ir al inicio" title="Volver al inicio">
+                <img src="assets/icons/hogar.svg" alt="Hogar" style="width: 24px; height: 24px;">
+            </button>
+        </div>
     </header>
 
     <!-- Vista Principal: Pantalla de Inicio -->
@@ -83,6 +89,42 @@
         <!-- Canvas SVG Container -->
         <div id="canvas-container" class="canvas-container">
             <!-- El canvas SVG se inicializará aquí -->
+        </div>
+        
+        <!-- Footer con controles reorganizados -->
+        <div class="canvas-footer w3-bar w3-white w3-border-top">
+            <!-- Controles de acción y zoom centrados -->
+            <div class="footer-controls-container">
+                <!-- Botón Deshacer (anterior-posterior invertido) -->
+                <button id="undo-btn" class="footer-btn w3-button w3-hover-light-grey" aria-label="Deshacer (Ctrl+Z)" title="Deshacer (Ctrl+Z)">
+                    <img src="assets/icons/anterior-posterior.svg" alt="Deshacer" class="footer-icon footer-icon-flip">
+                </button>
+                
+                <!-- Botón Zoom Out -->
+                <button id="zoom-out-btn" class="footer-btn w3-button w3-hover-light-grey" aria-label="Alejar">
+                    <img src="assets/icons/zoom out.svg" alt="Zoom Out" class="footer-icon">
+                </button>
+                
+                <!-- Barra de porcentaje de zoom -->
+                <div class="zoom-info">
+                    <span id="zoom-percentage" class="zoom-text">100%</span>
+                    <div class="zoom-bar-container" id="zoom-bar-container">
+                        <div class="zoom-bar">
+                            <div id="zoom-indicator" class="zoom-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botón Zoom In -->
+                <button id="zoom-in-btn" class="footer-btn w3-button w3-hover-light-grey" aria-label="Acercar">
+                    <img src="assets/icons/zoom in.svg" alt="Zoom In" class="footer-icon">
+                </button>
+                
+                <!-- Botón Rehacer (anterior-posterior normal) -->
+                <button id="redo-btn" class="footer-btn w3-button w3-hover-light-grey" aria-label="Rehacer (Ctrl+Y)" title="Rehacer (Ctrl+Y)">
+                    <img src="assets/icons/anterior-posterior.svg" alt="Rehacer" class="footer-icon">
+                </button>
+            </div>
         </div>
     </div>
 

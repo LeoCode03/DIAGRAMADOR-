@@ -105,6 +105,50 @@ class DiagramadorApp {
             });
         }
 
+        // Botones de Zoom
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', () => {
+                if (this.canvas) {
+                    this.canvas.zoomIn();
+                }
+            });
+        }
+
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', () => {
+                if (this.canvas) {
+                    this.canvas.zoomOut();
+                }
+            });
+        }
+
+        // Botón Home (en el header)
+        const homeBtn = document.getElementById('header-home-btn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', () => {
+                this.showView('home');
+            });
+        }
+
+        // Botones de Deshacer/Rehacer
+        const undoBtn = document.getElementById('undo-btn');
+        const redoBtn = document.getElementById('redo-btn');
+        
+        if (undoBtn) {
+            undoBtn.addEventListener('click', () => {
+                this.undo();
+            });
+        }
+
+        if (redoBtn) {
+            redoBtn.addEventListener('click', () => {
+                this.redo();
+            });
+        }
+
         // Atajos de teclado
         document.addEventListener('keydown', (e) => {
             this.handleKeyboard(e);
@@ -303,6 +347,9 @@ class DiagramadorApp {
 
         // Cargar datos del diagrama en el canvas
         this.loadDiagramToCanvas();
+        
+        // Actualizar estado de botones de undo/redo
+        this.updateUndoRedoButtons();
     }
 
     /**
@@ -475,6 +522,16 @@ class DiagramadorApp {
             targetView.classList.add('fade-in');
             this.currentView = viewName;
         }
+
+        // Manejar visibilidad del botón hogar en el header
+        const headerHomeContainer = document.getElementById('header-home-container');
+        if (headerHomeContainer) {
+            if (viewName === 'canvas') {
+                headerHomeContainer.classList.remove('w3-hide');
+            } else {
+                headerHomeContainer.classList.add('w3-hide');
+            }
+        }
     }
 
     /**
@@ -486,6 +543,22 @@ class DiagramadorApp {
             event.preventDefault();
             if (this.currentView === 'canvas') {
                 this.saveDiagram();
+            }
+        }
+
+        // Ctrl+Z - Deshacer
+        if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
+            event.preventDefault();
+            if (this.currentView === 'canvas') {
+                this.undo();
+            }
+        }
+
+        // Ctrl+Y o Ctrl+Shift+Z - Rehacer
+        if ((event.ctrlKey && event.key === 'y') || (event.ctrlKey && event.shiftKey && event.key === 'z')) {
+            event.preventDefault();
+            if (this.currentView === 'canvas') {
+                this.redo();
             }
         }
 
@@ -535,6 +608,47 @@ class DiagramadorApp {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    /**
+     * Deshacer último cambio (Ctrl+Z)
+     */
+    undo() {
+        // TODO: Implementar lógica de deshacer
+        // Por ahora, solo mostrar mensaje en consola
+        console.log('Undo action triggered');
+        
+        // Placeholder para futuro sistema de historial
+        this.updateUndoRedoButtons();
+    }
+
+    /**
+     * Rehacer último cambio deshecho (Ctrl+Y)
+     */
+    redo() {
+        // TODO: Implementar lógica de rehacer
+        // Por ahora, solo mostrar mensaje en consola
+        console.log('Redo action triggered');
+        
+        // Placeholder para futuro sistema de historial
+        this.updateUndoRedoButtons();
+    }
+
+    /**
+     * Actualiza el estado de los botones de deshacer/rehacer
+     */
+    updateUndoRedoButtons() {
+        const undoBtn = document.getElementById('undo-btn');
+        const redoBtn = document.getElementById('redo-btn');
+        
+        // TODO: Habilitar/deshabilitar según el historial disponible
+        // Por ahora, mantener habilitados
+        if (undoBtn) {
+            undoBtn.disabled = false; // Cambiar según historial
+        }
+        if (redoBtn) {
+            redoBtn.disabled = false; // Cambiar según historial
+        }
     }
 
     /**

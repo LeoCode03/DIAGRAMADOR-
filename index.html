@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagramador de Flujo - App Universitaria</title>
+    
+    <!-- W3.CSS Framework -->
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- PouchDB -->
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js"></script>
+</head>
+<body class="w3-light-grey">
+    <!-- Header -->
+    <header class="w3-bar w3-white w3-card w3-large">
+        <div class="w3-bar-item">
+            <img src="assets/icons/diagrama-flujo.svg" alt="Diagrama de Flujo" class="header-icon">
+            <span class="w3-text-dark-grey w3-large"><strong>DIAGRAMADOR DE FLUJO</strong></span>
+        </div>
+    </header>
+
+    <!-- Vista Principal: Pantalla de Inicio -->
+    <div id="home-view" class="main-view w3-container w3-center">
+        <div class="welcome-container">
+            <h2 class="w3-text-grey w3-margin-top">¡Bienvenido al Diagramador de Flujo!</h2>
+            <p class="w3-text-grey">Crea y edita diagramas de flujo de manera intuitiva</p>
+            
+            <!-- Botón Agregar con efecto hover -->
+            <div class="add-diagram-container w3-margin-top">
+                <button id="add-diagram-btn" class="add-button w3-button w3-circle w3-hover-shadow" aria-label="Agregar nuevo diagrama">
+                    <img src="assets/icons/agregar.svg" alt="Agregar diagrama" class="add-icon">
+                </button>
+                <p class="w3-text-grey w3-margin-top">Haz clic para crear tu primer diagrama</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista: Lista de Diagramas -->
+    <div id="diagrams-list-view" class="main-view w3-container w3-hide">
+        <div class="w3-row w3-margin-top">
+            <div class="w3-col l8 m10 s12 w3-center">
+                <div class="w3-card w3-white w3-round">
+                    <div class="w3-container w3-padding">
+                        <h3 class="w3-text-dark-grey">Mis Diagramas</h3>
+                        <hr>
+                        
+                        <!-- Botón para crear nuevo diagrama -->
+                        <div class="w3-margin-bottom">
+                            <button id="new-diagram-btn" class="w3-button w3-blue w3-round w3-margin-right">
+                                <i class="w3-margin-right">+</i>Nuevo Diagrama
+                            </button>
+                        </div>
+                        
+                        <!-- Lista de diagramas -->
+                        <div id="diagrams-list" class="w3-container">
+                            <!-- Los diagramas se cargarán dinámicamente aquí -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista: Canvas del Diagramador -->
+    <div id="canvas-view" class="main-view w3-hide">
+        <!-- Toolbar superior -->
+        <div class="w3-bar w3-white w3-border-bottom">
+            <button id="back-btn" class="w3-bar-item w3-button w3-hover-light-grey">
+                ← Volver
+            </button>
+            <div class="w3-bar-item">
+                <span id="diagram-name" class="w3-text-grey">Nuevo Diagrama</span>
+            </div>
+            <div class="w3-right">
+                <button id="save-btn" class="w3-bar-item w3-button w3-blue">Guardar</button>
+            </div>
+        </div>
+        
+        <!-- Canvas SVG Container -->
+        <div id="canvas-container" class="canvas-container">
+            <!-- El canvas SVG se inicializará aquí -->
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/modules/storage.js"></script>
+    <script src="js/modules/canvas.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

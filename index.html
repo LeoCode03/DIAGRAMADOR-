@@ -3,178 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagramador de Flujo - App Universitaria</title>
-    
-    <!-- W3.CSS Framework -->
+    <title>DIAGRAMADOR APP - Inicio</title>
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    
-    <!-- Estilos personalizados -->
     <link rel="stylesheet" href="css/styles.css">
-    
-    <!-- PouchDB -->
-    <script src="https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js"></script>
 </head>
 <body class="w3-light-grey">
     <!-- Header -->
-    <header class="w3-bar w3-white w3-card w3-large">
-        <div class="w3-bar-item">
-            <img src="assets/icons/diagrama-flujo.svg" alt="Diagrama de Flujo" class="header-icon">
-            <span class="w3-text-dark-grey w3-large"><strong>DIAGRAMADOR DE FLUJO</strong></span>
-        </div>
-        <!-- Controles del diagrama - Solo visible en vista canvas -->
-        <div class="w3-right w3-hide" id="header-diagram-controls">
-            <!-- Campo para nombre del diagrama -->
-            <input id="diagram-name-input" type="text" class="w3-input w3-border" placeholder="Nombre del diagrama" 
-                   style="width: 200px; height: 35px; margin: 8px 5px; display: inline-block;" value="Nuevo Diagrama">
-            <!-- Botón Descargar -->
-            <button id="download-btn" class="w3-bar-item w3-button w3-hover-light-grey" aria-label="Descargar diagrama" title="Descargar diagrama">
-                <img src="assets/icons/descargar.svg" alt="Descargar" style="width: 20px; height: 20px; margin-right: 5px;">
-                Descargar
-            </button>
-            <!-- Botón Hogar -->
-            <button id="header-home-btn" class="w3-bar-item w3-button w3-hover-light-grey" aria-label="Ir al inicio" title="Volver al inicio">
-                <img src="assets/icons/hogar.svg" alt="Hogar" style="width: 24px; height: 24px;">
-            </button>
+    <header class="w3-container w3-padding" style="background-color: #00C1BA;">
+        <div class="app-header">
+            <img src="icons/diagrama-flujo.svg" alt="Logo" class="app-logo">
+            <h1 class="app-title">DIAGRAMADOR APP</h1>
         </div>
     </header>
 
-    <!-- Menú Lateral Izquierdo -->
-    <div id="sidebar-menu" class="sidebar-menu">
-        <div class="sidebar-header">
-            <h4 class="w3-text-white w3-margin-small">Herramientas</h4>
-            <button id="sidebar-close-btn" class="sidebar-close-btn w3-button w3-hover-red" aria-label="Cerrar menú">
-                <img src="assets/icons/cerrar.svg" alt="Cerrar menú" style="width: 20px; height: 20px;">
+    <!-- Main Content -->
+    <main class="w3-container w3-padding-32" id="mainContent">
+        <!-- Botón crear diagrama (centrado cuando no hay diagramas) -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <button id="btnCreateDiagramEmpty" class="empty-state-button" aria-label="Crear nuevo diagrama">
+                <img src="icons/agregar.svg" alt="Crear diagrama" class="empty-state-icon">
+                <div class="empty-state-text">Crear Nuevo Diagrama</div>
             </button>
         </div>
-        <div class="sidebar-content">
-            <div class="sidebar-section">
-                <h5 class="w3-text-light-grey w3-margin-small">Nodos</h5>
-                <div class="nodes-container">
-                    <!-- Los iconos de nodos se agregarán aquí en el futuro -->
-                    <p class="w3-text-grey w3-center w3-padding">Próximamente: Iconos de nodos</p>
-                </div>
+
+        <!-- Lista de diagramas -->
+        <div id="diagramList" style="display: none;">
+            <div class="list-header">
+                <h2 style="color: #00C1BA;">Mis Diagramas</h2>
+                <button id="btnCreateDiagram" class="w3-button w3-round" style="background-color: #00C1BA; color: white;">
+                    <img src="icons/agregar.svg" alt="" class="btn-icon">
+                    Crear Nuevo
+                </button>
             </div>
-        </div>
-    </div>
-
-    <!-- Botón para abrir el menú lateral - Solo visible en canvas -->
-    <button id="sidebar-toggle-btn" class="sidebar-toggle-btn w3-button w3-hover-light-grey w3-hide" aria-label="Abrir menú de herramientas" title="Herramientas">
-        <img src="assets/icons/menu.svg" alt="Abrir menú" class="sidebar-toggle-icon">
-    </button>
-
-    <!-- Vista Principal: Pantalla de Inicio -->
-    <div id="home-view" class="main-view w3-container w3-center">
-        <div class="welcome-container">
-            <h2 class="w3-text-grey w3-margin-top">¡Bienvenido al Diagramador de Flujo!</h2>
-            <p class="w3-text-grey">Crea y edita diagramas de flujo de manera intuitiva</p>
             
-            <!-- Botón Agregar con efecto hover -->
-            <div class="add-diagram-container w3-margin-top">
-                <button id="add-diagram-btn" class="add-button w3-button w3-circle w3-hover-shadow" aria-label="Agregar nuevo diagrama">
-                    <img src="assets/icons/agregar.svg" alt="Agregar diagrama" class="add-icon">
+            <div class="w3-margin-top">
+                <button id="btnImportDiagram" class="w3-button w3-white w3-border w3-round w3-hover-light-grey" style="border-color: #00C1BA !important; color: #00C1BA;">
+                    <img src="icons/descargar.svg" alt="" class="btn-icon" style="transform: rotate(180deg);">
+                    Importar Diagrama
                 </button>
-                <p class="w3-text-grey w3-margin-top">Haz clic para crear tu primer diagrama</p>
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
             </div>
 
-            <!-- Lista de diagramas recientes -->
-            <div id="recent-diagrams" class="w3-margin-top w3-hide">
-                <h4 class="w3-text-grey">Diagramas Recientes</h4>
-                <div id="recent-diagrams-list" class="w3-left-align" style="max-width: 600px; margin: 0 auto;">
-                    <!-- Los diagramas recientes se cargarán aquí -->
-                </div>
-                <div class="w3-margin-top">
-                    <button id="view-all-diagrams" class="w3-button w3-blue w3-round">Ver Todos los Diagramas</button>
-                </div>
+            <div id="diagramsContainer" class="diagrams-container w3-margin-top">
+                <!-- Los diagramas se cargarán aquí dinámicamente -->
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- Vista: Lista de Diagramas -->
-    <div id="diagrams-list-view" class="main-view w3-container w3-hide">
-        <div class="w3-row w3-margin-top">
-            <div class="w3-col l8 m10 s12 w3-center">
-                <div class="w3-card w3-white w3-round">
-                    <div class="w3-container w3-padding">
-                        <h3 class="w3-text-dark-grey">Mis Diagramas</h3>
-                        <hr>
-                        
-                        <!-- Botón para crear nuevo diagrama -->
-                        <div class="w3-margin-bottom">
-                            <button id="new-diagram-btn" class="w3-button w3-blue w3-round w3-margin-right">
-                                <i class="w3-margin-right">+</i>Nuevo Diagrama
-                            </button>
-                        </div>
-                        
-                        <!-- Lista de diagramas -->
-                        <div id="diagrams-list" class="w3-container">
-                            <!-- Los diagramas se cargarán dinámicamente aquí -->
-                        </div>
-                    </div>
+    <!-- Modal de confirmación -->
+    <div id="confirmModal" class="w3-modal">
+        <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width: 400px;">
+            <div class="w3-container" style="background-color: #00C1BA; color: white; padding: 16px;">
+                <h3 style="margin: 0;">Confirmación</h3>
+            </div>
+            <div class="w3-container w3-padding">
+                <p id="confirmMessage"></p>
+                <div class="w3-center w3-margin-top">
+                    <button id="btnConfirmYes" class="w3-button w3-round w3-margin-right" style="background-color: #FF6B6B; color: white;">Sí</button>
+                    <button id="btnConfirmNo" class="w3-button w3-white w3-border w3-round" style="border-color: #95A5A6; color: #5A6C7D;" onclick="closeConfirmModal()">No</button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Vista: Canvas del Diagramador -->
-    <div id="canvas-view" class="main-view w3-hide">
-        <!-- Toolbar superior -->
-        <div class="w3-bar w3-white w3-border-bottom">
-            <button id="back-btn" class="w3-bar-item w3-button w3-hover-light-grey">
-                ← Volver
-            </button>
-            <div class="w3-bar-item">
-                <span id="diagram-name" class="w3-text-grey">Nuevo Diagrama</span>
-            </div>
-            <div class="w3-right">
-                <button id="save-btn" class="w3-bar-item w3-button w3-blue">Guardar</button>
-            </div>
-        </div>
-        
-        <!-- Canvas SVG Container -->
-        <div id="canvas-container" class="canvas-container">
-            <!-- El canvas SVG se inicializará aquí -->
-        </div>
-        
-        <!-- Footer con controles reorganizados -->
-        <div class="canvas-footer w3-bar w3-white w3-border-top">
-            <!-- Controles de acción y zoom centrados -->
-            <div class="footer-controls-container">
-                <!-- Botón Deshacer (anterior-posterior invertido) -->
-                <button id="undo-btn" class="footer-btn w3-button w3-hover-light-grey" aria-label="Deshacer (Ctrl+Z)" title="Deshacer (Ctrl+Z)">
-                    <img src="assets/icons/anterior-posterior.svg" alt="Deshacer" class="footer-icon footer-icon-flip">
-                </button>
-                
-                <!-- Botón Zoom Out -->
-                <button id="zoom-out-btn" class="footer-btn w3-button w3-hover-light-grey" aria-label="Alejar">
-                    <img src="assets/icons/zoom out.svg" alt="Zoom Out" class="footer-icon">
-                </button>
-                
-                <!-- Barra de porcentaje de zoom -->
-                <div class="zoom-info">
-                    <span id="zoom-percentage" class="zoom-text">100%</span>
-                    <div class="zoom-bar-container" id="zoom-bar-container">
-                        <div class="zoom-bar">
-                            <div id="zoom-indicator" class="zoom-indicator"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Botón Zoom In -->
-                <button id="zoom-in-btn" class="footer-btn w3-button w3-hover-light-grey" aria-label="Acercar">
-                    <img src="assets/icons/zoom in.svg" alt="Zoom In" class="footer-icon">
-                </button>
-                
-                <!-- Botón Rehacer (anterior-posterior normal) -->
-                <button id="redo-btn" class="footer-btn w3-button w3-hover-light-grey" aria-label="Rehacer (Ctrl+Y)" title="Rehacer (Ctrl+Y)">
-                    <img src="assets/icons/anterior-posterior.svg" alt="Rehacer" class="footer-icon">
-                </button>
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
-    <script src="js/modules/storage.js"></script>
-    <script src="js/modules/canvas.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/storage.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

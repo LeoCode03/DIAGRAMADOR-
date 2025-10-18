@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIAGRAMADOR APP - Editor</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="w3-light-grey">
+    <!-- Header -->
+    <header class="w3-container w3-padding canvas-header" style="background-color: #00C1BA;">
+        <div class="canvas-header-content">
+            <div class="header-left">
+                <img src="icons/diagrama-flujo.svg" alt="Logo" class="app-logo-small">
+                <input type="text" id="diagramName" class="diagram-name-input w3-input w3-border-0" 
+                       placeholder="Nombre del diagrama" aria-label="Nombre del diagrama">
+            </div>
+            <div class="header-right">
+                <button id="btnDownload" class="w3-button w3-white w3-round w3-hover-light-grey" 
+                        title="Descargar diagrama" aria-label="Descargar diagrama">
+                    <img src="icons/descargar.svg" alt="" class="btn-icon">
+                </button>
+                <button id="btnHome" class="w3-button w3-white w3-round w3-hover-light-grey" 
+                        title="Volver al inicio" aria-label="Volver al inicio">
+                    <img src="icons/hogar.svg" alt="" class="btn-icon">
+                </button>
+            </div>
+        </div>
+        <div class="save-status" id="saveStatus">Guardado</div>
+    </header>
+
+    <!-- Botón de menú -->
+    <button id="btnMenu" class="menu-toggle-btn w3-button w3-round-large" style="background-color: #00C1BA; color: white;"
+            title="Abrir menú de nodos" aria-label="Abrir menú de nodos">
+        <img src="icons/menu.svg" alt="" class="btn-icon">
+    </button>
+
+    <!-- Menú lateral de nodos -->
+    <aside id="nodeMenu" class="node-menu w3-sidebar w3-bar-block w3-card w3-animate-left" style="display: none;">
+        <div class="w3-container" style="background-color: #00C1BA; color: white;">
+            <h3>Nodos</h3>
+            <button class="w3-button w3-display-topright w3-hover-red" onclick="toggleNodeMenu()" 
+                    aria-label="Cerrar menú" style="padding: 8px; background-color: #FF6B6B; border-radius: 4px;">
+                <img src="icons/cerrar.svg" alt="Cerrar" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
+            </button>
+        </div>
+        <div class="node-menu-items w3-padding">
+            <div class="node-item" data-node-type="inicio" draggable="true">
+                <img src="icons/inicio.svg" alt="" class="node-icon">
+                <span>Inicio</span>
+            </div>
+            <div class="node-item" data-node-type="fin" draggable="true">
+                <img src="icons/fin.svg" alt="" class="node-icon">
+                <span>Fin</span>
+            </div>
+            <div class="node-item" data-node-type="asignacion" draggable="true">
+                <img src="icons/asignacion.svg" alt="" class="node-icon">
+                <span>Asignación</span>
+            </div>
+            <div class="node-item" data-node-type="si" draggable="true">
+                <img src="icons/si.svg" alt="" class="node-icon node-icon-diamond">
+                <span>Decisión</span>
+            </div>
+            <div class="node-item" data-node-type="comentario" draggable="true">
+                <img src="icons/comentario.svg" alt="" class="node-icon">
+                <span>Comentario</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Canvas principal -->
+    <main id="canvasContainer" class="canvas-container">
+        <svg id="connectionLayer" class="connection-layer">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#333" />
+                </marker>
+            </defs>
+        </svg>
+        <div id="nodeLayer" class="node-layer">
+            <!-- Los nodos se agregarán aquí dinámicamente -->
+        </div>
+    </main>
+
+    <!-- Footer con controles -->
+    <footer class="canvas-footer w3-container w3-white w3-border-top">
+        <div class="footer-controls">
+            <button id="btnUndo" class="w3-button w3-hover-light-grey" 
+                    title="Deshacer (Ctrl+Z)" aria-label="Deshacer">
+                <img src="icons/anterior-posterior.svg" alt="" class="btn-icon">
+            </button>
+            
+            <button id="btnZoomOut" class="w3-button w3-hover-light-grey" 
+                    title="Alejar" aria-label="Alejar zoom">
+                <img src="icons/zoom out.svg" alt="" class="btn-icon">
+            </button>
+            
+            <div class="zoom-control">
+                <input type="range" id="zoomSlider" min="50" max="250" value="100" 
+                       aria-label="Control de zoom">
+                <span id="zoomValue">100%</span>
+            </div>
+            
+            <button id="btnZoomIn" class="w3-button w3-hover-light-grey" 
+                    title="Acercar" aria-label="Acercar zoom">
+                <img src="icons/zoom in.svg" alt="" class="btn-icon">
+            </button>
+            
+            <button id="btnRedo" class="w3-button w3-hover-light-grey" 
+                    title="Rehacer (Ctrl+Y)" aria-label="Rehacer">
+                <img src="icons/anterior-posterior.svg" alt="" class="btn-icon" style="transform: scaleX(-1);">
+            </button>
+            
+            <button id="btnFitView" class="w3-button w3-hover-light-grey" 
+                    title="Ajustar a la pantalla" aria-label="Ajustar vista">
+                <img src="icons/ajustar.svg" alt="" class="btn-icon">
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal de confirmación de nombre -->
+    <div id="nameModal" class="w3-modal">
+        <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width: 400px;">
+            <div class="w3-container" style="background-color: #00C1BA; color: white;">
+                <span class="w3-button w3-display-topright w3-hover-red" onclick="cancelNameChange()">&times;</span>
+                <h3>Cambiar nombre</h3>
+            </div>
+            <div class="w3-container w3-padding">
+                <p>¿Desea cambiar el nombre del diagrama?</p>
+                <p class="w3-text-grey"><strong>Nuevo nombre:</strong> <span id="newNamePreview"></span></p>
+                <div class="w3-center w3-margin-top">
+                    <button id="btnConfirmName" class="w3-button w3-round w3-margin-right" style="background-color: #00C1BA; color: white;">Aceptar</button>
+                    <button class="w3-button w3-white w3-border w3-round" style="border-color: #00C1BA; color: #00C1BA;" onclick="cancelNameChange()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/canvas.js"></script>
+</body>
+</html>

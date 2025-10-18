@@ -1,555 +1,130 @@
-/* ==========================================
-   DIAGRAMADOR-APP - Estilos Personalizados
-   ========================================== */
-
-/* Variables CSS para consistencia */
+/* ==================== VARIABLES Y CONFIGURACIÓN GLOBAL ==================== */
 :root {
-    --primary-color: #2196F3;
-    --secondary-color: #FFC107;
-    --accent-color: #4CAF50;
-    --text-color: #333;
-    --light-grey: #f5f5f5;
-    --border-color: #ddd;
-    --shadow: 0 2px 5px rgba(0,0,0,0.1);
-    --transition: all 0.3s ease;
+    /* Colores basados en #00C1BA (Turquesa) - Teoría de Color */
+    --primary-color: #00C1BA;           /* Turquesa - Color principal */
+    --primary-dark: #009B95;            /* Turquesa oscuro - Sombras */
+    --primary-light: #4DD4CE;           /* Turquesa claro - Highlights */
+    --primary-pale: #B3F0ED;            /* Turquesa muy claro - Fondos */
+    
+    --secondary-color: #00A8D6;         /* Azul cyan - Análogo */
+    --accent-color: #00D4A8;            /* Verde agua - Análogo */
+    
+    --success-color: #00C9A7;           /* Verde turquesa - Éxito */
+    --warning-color: #FFB84D;           /* Naranja suave - Advertencia (complementario cálido) */
+    --danger-color: #FF6B6B;            /* Rojo coral - Error (complementario) */
+    --info-color: #4DD4E8;              /* Cyan claro - Información */
+    
+    --text-dark: #2C3E50;               /* Gris azulado oscuro */
+    --text-light: #5A6C7D;              /* Gris azulado medio */
+    --text-muted: #95A5A6;              /* Gris azulado claro */
+    
+    --border-color: #D1E9E7;            /* Gris verdoso claro */
+    --bg-light: #F0FFFE;                /* Fondo muy claro con tinte turquesa */
+    --bg-white: #FFFFFF;                /* Blanco puro */
+    
+    --node-size: 120px;
+    --node-size-mobile: 100px;
 }
 
-/* Reset y configuraciones globales */
 * {
     box-sizing: border-box;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: var(--light-grey);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow-x: hidden;
 }
 
-/* ==========================================
-   HEADER
-   ========================================== */
-header {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-    box-shadow: var(--shadow);
-    height: 60px; /* Altura fija del header */
-}
-
-.header-icon {
-    width: 32px;
-    height: 32px;
-    margin-right: 10px;
-    vertical-align: middle;
-}
-
-/* Controles del diagrama en el header */
-#header-diagram-controls {
+/* ==================== HEADER ==================== */
+.app-header {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 15px;
 }
 
-#header-diagram-controls input {
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-#header-diagram-controls button {
-    white-space: nowrap;
-    font-size: 14px;
-}
-
-#header-diagram-controls button img {
-    vertical-align: middle;
-}
-
-/* ==========================================
-   MENÚ LATERAL IZQUIERDO
-   ========================================== */
-.sidebar-menu {
-    position: fixed;
-    top: 60px; /* Pegado al header (sin espacio) */
-    left: -300px; /* Oculto inicialmente */
-    width: 300px;
-    height: calc(100vh - 120px); /* Altura desde header hasta footer (60px header + 60px footer) */
-    background: linear-gradient(135deg, #2c3e50, #34495e);
-    box-shadow: 2px 0 10px rgba(0,0,0,0.3);
-    z-index: 1200; /* Por encima del contenido pero debajo del header */
-    transition: left 0.3s ease;
-    overflow-y: auto;
-}
-
-.sidebar-menu.open {
-    left: 0; /* Mostrar menú */
-}
-
-.sidebar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    background: rgba(0,0,0,0.2);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.sidebar-close-btn {
-    width: 35px !important;
-    height: 35px !important;
-    border-radius: 50% !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-.sidebar-content {
-    padding: 20px;
-}
-
-.sidebar-section {
-    margin-bottom: 30px;
-}
-
-.nodes-container {
-    min-height: 200px;
-    border: 2px dashed rgba(255,255,255,0.2);
-    border-radius: 8px;
-    padding: 20px;
-}
-
-/* Botón para abrir el menú */
-.sidebar-toggle-btn {
-    position: fixed;
-    top: 70px; /* Debajo del header de 60px + 10px de margen */
-    left: 20px;
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 50% !important;
-    z-index: 1300; /* Por encima del menú */
-    box-shadow: var(--shadow);
-    display: flex;
-    align-items: center !important;
-    justify-content: center !important;
-    background: white !important;
-    transition: var(--transition);
-}
-
-.sidebar-toggle-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.sidebar-toggle-icon {
-    width: 24px;
-    height: 24px;
-}
-
-/* Responsivo */
-@media (max-width: 768px) {
-    .sidebar-menu {
-        width: 280px;
-        left: -280px;
-    }
-    
-    .sidebar-toggle-btn {
-        width: 45px !important;
-        height: 45px !important;
-        left: 15px;
-    }
-}
-
-/* ==========================================
-   VISTAS PRINCIPALES
-   ========================================== */
-.main-view {
-    padding-top: 60px; /* Espacio para el header fijo */
-    min-height: 100vh;
-}
-
-/* ==========================================
-   VISTA DE INICIO (HOME)
-   ========================================== */
-.welcome-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 120px);
-    padding: 2rem;
-}
-
-.add-diagram-container {
-    padding: 2rem;
-}
-
-/* Botón Agregar con efectos */
-.add-button {
-    width: 120px;
-    height: 120px;
-    border: none;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: var(--transition);
-    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
-}
-
-.add-button:hover {
-    transform: translateY(-5px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
-}
-
-.add-button:active {
-    transform: translateY(-2px) scale(1.02);
-}
-
-.add-icon {
-    width: 60px;
-    height: 60px;
-    transition: var(--transition);
-    filter: brightness(0) invert(1); /* Hace el SVG blanco */
-}
-
-.add-button:hover .add-icon {
-    transform: rotate(90deg) scale(1.1);
-}
-
-/* Efecto de ondas en el botón */
-.add-button::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    transition: width 0.6s, height 0.6s, top 0.6s, left 0.6s;
-    transform: translate(-50%, -50%);
-}
-
-.add-button:hover::before {
-    width: 300px;
-    height: 300px;
-    top: 50%;
-    left: 50%;
-}
-
-/* ==========================================
-   VISTA DE LISTA DE DIAGRAMAS
-   ========================================== */
-#diagrams-list-view {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: calc(100vh - 70px);
-}
-
-.diagram-item {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    margin: 10px 0;
-    background: white;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-    cursor: pointer;
-}
-
-.diagram-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-}
-
-.diagram-preview {
+.app-logo {
     width: 50px;
     height: 50px;
-    background: var(--light-grey);
-    border-radius: 4px;
-    margin-right: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: var(--primary-color);
 }
 
-.diagram-info {
-    flex: 1;
+.app-logo-small {
+    width: 35px;
+    height: 35px;
 }
 
-.diagram-title {
-    font-weight: bold;
-    color: var(--text-color);
-    margin-bottom: 5px;
-}
-
-.diagram-date {
-    font-size: 0.9em;
-    color: #666;
-}
-
-.diagram-actions {
-    display: flex;
-    gap: 10px;
-}
-
-/* ==========================================
-   VISTA DEL CANVAS
-   ========================================== */
-#canvas-view {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #fff;
-    z-index: 999;
-}
-
-.canvas-container {
-    position: absolute;
-    top: 60px; /* Altura del toolbar */
-    left: 0;
-    right: 0;
-    bottom: 60px; /* Altura del footer */
-    overflow: hidden;
-    background: #ffffff; /* Fondo blanco limpio sin puntos */
-    width: 100%;
-    height: calc(100vh - 120px); /* Altura total menos header y footer */
-}
-
-/* ==========================================
-   CANVAS SVG
-   ========================================== */
-#main-canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-    cursor: grab;
-    background: transparent;
-    min-width: 100%;
-    min-height: 100%;
-}
-
-#main-canvas:active {
-    cursor: grabbing;
-}
-
-/* Puntos del grid */
-.grid-dot {
-    fill: #cccccc;
-    opacity: 0.6;
-}
-
-.grid-dot.highlighted {
-    fill: var(--primary-color);
-}
-
-/* ==========================================
-   FOOTER DEL CANVAS CON CONTROLES DE ZOOM
-   ========================================== */
-.canvas-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-}
-
-.footer-controls-container {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 0 20px;
-}
-
-.footer-btn {
-    width: 40px !important;
-    height: 40px !important;
-    padding: 8px !important;
-    border-radius: 8px !important;
-    border: 1px solid #ddd !important;
-    transition: var(--transition) !important;
-}
-
-.footer-btn:hover {
-    background-color: #f0f0f0 !important;
-    transform: scale(1.05);
-}
-
-.footer-icon {
-    width: 20px;
-    height: 20px;
-    display: block;
-}
-
-.footer-icon-flip {
-    transform: scaleX(-1); /* Invierte horizontalmente el icono */
-}
-
-.zoom-controls-footer {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 0 20px;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.action-btn {
-    width: 45px !important;
-    height: 45px !important;
-    border-radius: 8px !important;
-    margin: 8px !important;
-    transition: var(--transition) !important;
-    border: 1px solid #ddd !important;
-}
-
-.action-btn:hover {
-    background-color: #f0f0f0 !important;
-    transform: scale(1.05);
-}
-
-.action-btn:disabled {
-    opacity: 0.5 !important;
-    cursor: not-allowed !important;
-}
-
-.action-btn:disabled:hover {
-    transform: none !important;
-    background-color: initial !important;
-}
-
-.zoom-btn-footer {
-    width: 40px !important;
-    height: 40px !important;
-    padding: 8px !important;
-    border: 1px solid var(--border-color) !important;
-    transition: var(--transition) !important;
-}
-
-.zoom-btn-footer:hover {
-    background-color: #f5f5f5 !important;
-}
-
-.zoom-icon-footer {
-    width: 20px;
-    height: 20px;
-    display: block;
-}
-
-.zoom-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    min-width: 120px;
-}
-
-.zoom-text {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-color);
+.app-title {
     margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
 }
 
-.zoom-bar-container {
-    width: 100px;
-    height: 6px;
-    background-color: #e0e0e0;
-    border-radius: 3px;
-    overflow: hidden;
-    position: relative;
+.btn-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+/* ==================== VISTA INICIAL ==================== */
+.empty-state {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.empty-state-icon {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 30px;
     cursor: pointer;
-    transition: var(--transition);
+    transition: transform 0.5s ease;
+    filter: drop-shadow(0 10px 30px rgba(0, 193, 186, 0.3));
 }
 
-.zoom-bar-container:hover {
-    height: 8px;
-    margin-top: -1px;
+.empty-state-button {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    cursor: pointer;
 }
 
-.zoom-bar {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    background-color: #e0e0e0;
+.empty-state-button:hover {
+    background: transparent !important;
+    border: none !important;
 }
 
-.zoom-indicator {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary-color), #1976D2);
-    border-radius: 3px;
-    transition: width 0.3s ease;
-    width: 50%; /* 50% de la barra = 100% de zoom (centro del rango 50%-150%) */
-    position: relative;
+.empty-state-button:focus {
+    outline: none !important;
+    border: none !important;
 }
 
-.zoom-indicator::after {
-    content: '';
-    position: absolute;
-    right: -3px;
-    top: -1px;
-    width: 6px;
-    height: 8px;
-    background: #1976D2;
-    border-radius: 50%;
+.empty-state-button:hover .empty-state-icon {
+    transform: rotate(90deg);
+    filter: drop-shadow(0 0 20px rgba(0, 193, 186, 0.5));
+}
+
+.empty-state-button:hover .empty-state-text {
+    color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.empty-state-text {
+    font-size: 1.8rem;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-top: 20px;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    animation: fadeInText 0.8s ease 0.3s forwards;
+    transition: all 0.3s ease;
 }
 
-.zoom-bar-container:hover .zoom-indicator::after {
-    opacity: 1;
-}
-
-/* ==========================================
-   BOTONES Y CONTROLES
-   ========================================== */
-.w3-button {
-    transition: var(--transition);
-}
-
-.w3-button:hover {
-    transform: translateY(-1px);
-}
-
-#back-btn {
-    font-weight: bold;
-}
-
-#save-btn {
-    background-color: var(--accent-color) !important;
-}
-
-#save-btn:hover {
-    background-color: #45a049 !important;
-}
-
-/* ==========================================
-   UTILIDADES
-   ========================================== */
-.fade-in {
-    animation: fadeIn 0.5s ease-in;
-}
-
-.fade-out {
-    animation: fadeOut 0.3s ease-out;
-}
-
-@keyframes fadeIn {
+@keyframes fadeInText {
     from {
         opacity: 0;
         transform: translateY(20px);
@@ -560,113 +135,609 @@ header {
     }
 }
 
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
-/* Clase para ocultar elementos */
-.hidden {
-    display: none !important;
+.diagrams-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 10px 0;
 }
 
-/* ==========================================
-   RESPONSIVE DESIGN
-   ========================================== */
+.diagram-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    position: relative;
+}
+
+.diagram-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.diagram-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.diagram-card-icon {
+    width: 30px;
+    height: 30px;
+}
+
+.diagram-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.diagram-card-date {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 15px;
+}
+
+.diagram-card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.diagram-card-actions button {
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.diagram-card-actions .delete-btn:hover {
+    background-color: #FF6B6B !important;
+    border-color: #FF6B6B !important;
+    color: white !important;
+}
+
+/* ==================== CANVAS HEADER ==================== */
+.canvas-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.canvas-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.header-right {
+    display: flex;
+    gap: 10px;
+}
+
+.diagram-name-input {
+    background: rgba(255,255,255,0.9);
+    color: var(--text-dark);
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 4px;
+    max-width: 400px;
+    transition: background 0.3s;
+}
+
+.diagram-name-input:focus {
+    background: white;
+    outline: 2px solid var(--secondary-color);
+}
+
+.save-status {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.9);
+    text-align: right;
+    margin-top: 5px;
+}
+
+.save-status.saving {
+    color: var(--secondary-color);
+}
+
+.save-status.error {
+    color: var(--danger-color);
+}
+
+/* ==================== MENÚ DE NODOS ==================== */
+.menu-toggle-btn {
+    position: fixed;
+    left: 20px;
+    top: 100px;
+    z-index: 99;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: opacity 0.3s ease;
+}
+
+.menu-toggle-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.node-menu {
+    width: 250px;
+    height: calc(100% - 73px);
+    z-index: 98;
+    top: 73px;
+    left: 0;
+    background: white;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.1);
+}
+
+.node-menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.node-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: var(--bg-light);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: move;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.node-item:hover {
+    background: white;
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.node-item:active {
+    cursor: grabbing;
+}
+
+.node-icon {
+    width: 40px;
+    height: 40px;
+}
+
+.node-icon-diamond {
+    transform: rotate(45deg);
+}
+
+/* ==================== CANVAS ==================== */
+.canvas-container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 140px - 60px); /* altura total - header - footer */
+    overflow: hidden;
+    background: 
+        linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px),
+        linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+    cursor: grab;
+}
+
+.canvas-container.panning {
+    cursor: grabbing;
+}
+
+.canvas-container.panning:active {
+    cursor: grabbing;
+}
+
+.connection-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.connection-layer path {
+    pointer-events: stroke;
+    cursor: pointer;
+    stroke-width: 2;
+    stroke: var(--text-dark);
+    fill: none;
+}
+
+.connection-layer path.selected {
+    stroke: var(--primary-color);
+    stroke-width: 3;
+}
+
+.connection-layer path:hover {
+    stroke: var(--primary-color);
+    stroke-width: 3;
+}
+
+.node-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: 0 0;
+    z-index: 2;
+}
+
+/* ==================== NODOS ==================== */
+.flow-node {
+    position: absolute;
+    width: var(--node-size);
+    min-height: var(--node-size);
+    background: white;
+    border: 3px solid var(--primary-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    cursor: move;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    transition: box-shadow 0.2s;
+}
+
+.flow-node:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+
+.flow-node.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 16px rgba(0, 193, 186, 0.6);
+}
+
+.flow-node.selected .connection-point {
+    display: block;
+}
+
+.flow-node.dragging {
+    opacity: 0.7;
+    cursor: grabbing;
+}
+
+.flow-node.inicio,
+.flow-node.fin {
+    border-radius: 50%;
+}
+
+.flow-node.si {
+    border-radius: 0;
+    transform: rotate(45deg);
+    width: calc(var(--node-size) * 0.9);
+    height: calc(var(--node-size) * 0.9);
+}
+
+.flow-node.si .node-content {
+    transform: rotate(-45deg);
+}
+
+.flow-node.comentario {
+    border-style: dashed;
+    border-color: var(--text-light);
+}
+
+.node-icon-display {
+    width: 35px;
+    height: 35px;
+    margin-bottom: 8px;
+}
+
+.node-content {
+    text-align: center;
+    word-wrap: break-word;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    max-width: 100%;
+    outline: none;
+    cursor: text;
+}
+
+.node-content:empty:before {
+    content: 'Texto...';
+    color: var(--text-muted);
+}
+
+.node-delete-btn {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    width: 28px;
+    height: 28px;
+    background: var(--danger-color);
+    border: 2px solid white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    padding: 4px;
+}
+
+.flow-node:hover .node-delete-btn {
+    display: flex;
+}
+
+.node-delete-btn img {
+    width: 100%;
+    height: 100%;
+    filter: brightness(0) invert(1);
+}
+
+/* Puntos de conexión */
+.connection-point {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: var(--primary-color);
+    border: 2px solid white;
+    border-radius: 50%;
+    cursor: crosshair;
+    display: none;
+    transition: all 0.2s;
+    z-index: 10;
+}
+
+.flow-node:hover .connection-point,
+.flow-node.selected .connection-point {
+    display: block;
+}
+
+.connection-point.top {
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.connection-point.right {
+    top: 50%;
+    right: -8px;
+    transform: translateY(-50%);
+}
+
+.connection-point.bottom {
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.connection-point.left {
+    top: 50%;
+    left: -8px;
+    transform: translateY(-50%);
+}
+
+.connection-point:hover {
+    background: var(--secondary-color);
+    transform: scale(1.3) translate(-50%, -50%);
+}
+
+/* Etiquetas de conexión */
+.connection-label {
+    font-size: 0.85rem;
+    background: white;
+    padding: 2px 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    pointer-events: all;
+    cursor: text;
+}
+
+/* ==================== FOOTER ==================== */
+.canvas-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+    padding: 10px 20px;
+}
+
+.footer-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.zoom-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 15px;
+    background: var(--bg-light);
+    border-radius: 20px;
+}
+
+#zoomSlider {
+    width: 150px;
+    cursor: pointer;
+}
+
+#zoomValue {
+    font-weight: 600;
+    color: var(--text-dark);
+    min-width: 45px;
+    text-align: center;
+}
+
+/* ==================== MODALES ==================== */
+.w3-modal {
+    padding-top: 100px;
+}
+
+.w3-modal-content {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-    .welcome-container {
-        padding: 1rem;
+    :root {
+        --node-size: var(--node-size-mobile);
     }
-    
-    .add-button {
+
+    .app-title {
+        font-size: 1.3rem;
+    }
+
+    .app-logo {
+        width: 35px;
+        height: 35px;
+    }
+
+    .diagram-name-input {
+        font-size: 1rem;
+        max-width: 200px;
+    }
+
+    .diagrams-container {
+        grid-template-columns: 1fr;
+    }
+
+    .node-menu {
+        width: 200px;
+        height: calc(100% - 73px);
+        top: 73px;
+    }
+
+    .menu-toggle-btn {
+        left: 10px;
+        top: 80px;
+    }
+
+    .footer-controls {
+        gap: 8px;
+    }
+
+    #zoomSlider {
         width: 100px;
-        height: 100px;
     }
-    
-    .add-icon {
-        width: 50px;
-        height: 50px;
+
+    .canvas-container {
+        height: calc(100vh - 120px - 60px);
     }
-    
-    .header-icon {
-        width: 24px;
-        height: 24px;
+
+    .flow-node {
+        font-size: 0.8rem;
     }
-    
-    .main-view {
-        padding-top: 60px;
+
+    .node-icon-display {
+        width: 28px;
+        height: 28px;
     }
 }
 
 @media (max-width: 480px) {
-    .add-button {
-        width: 80px;
-        height: 80px;
+    .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
     }
-    
-    .add-icon {
-        width: 40px;
-        height: 40px;
+
+    .diagram-name-input {
+        width: 100%;
+        max-width: none;
     }
-    
-    .diagram-item {
-        padding: 10px;
+
+    .footer-controls button {
+        padding: 6px 10px;
     }
-    
-    .diagram-preview {
-        width: 40px;
-        height: 40px;
-        margin-right: 10px;
-    }
-}
 
-/* ==========================================
-   ESTADOS DE CARGA
-   ========================================== */
-.loading {
-    opacity: 0.7;
-    pointer-events: none;
-}
-
-.loading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 30px;
-    height: 30px;
-    margin: -15px 0 0 -15px;
-    border: 3px solid var(--light-grey);
-    border-top: 3px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* ==========================================
-   ACCESIBILIDAD
-   ========================================== */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+    .btn-icon {
+        width: 18px;
+        height: 18px;
     }
 }
 
-/* Focus visible para navegación por teclado */
-.add-button:focus-visible,
-.w3-button:focus-visible {
+/* ==================== UTILIDADES ==================== */
+.hidden {
+    display: none !important;
+}
+
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+.cursor-grab {
+    cursor: grab;
+}
+
+.cursor-grabbing {
+    cursor: grabbing;
+}
+
+.cursor-crosshair {
+    cursor: crosshair;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Accesibilidad */
+button:focus,
+input:focus {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
 }

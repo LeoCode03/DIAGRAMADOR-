@@ -637,6 +637,31 @@ function createConnection(fromNodeId, fromPosition, toNodeId, toPosition, label 
 }
 
 /**
+ * Ajusta un punto de conexión para que la línea termine en el borde del círculo
+ * en lugar del centro, evitando espacios entre la flecha y el punto de conexión
+ */
+function adjustPointForConnectionCircle(point, direction, offset = 8) {
+    const adjusted = { ...point };
+    
+    switch (direction) {
+        case 'top':
+            adjusted.y += offset; // Mover hacia abajo
+            break;
+        case 'bottom':
+            adjusted.y -= offset; // Mover hacia arriba
+            break;
+        case 'left':
+            adjusted.x += offset; // Mover hacia la derecha
+            break;
+        case 'right':
+            adjusted.x -= offset; // Mover hacia la izquierda
+            break;
+    }
+    
+    return adjusted;
+}
+
+/**
  * Renderiza una conexión
  */
 function renderConnection(connection) {
@@ -645,8 +670,12 @@ function renderConnection(connection) {
     
     if (!fromNode || !toNode) return;
     
-    const fromPoint = getConnectionPoint(fromNode, connection.fromPosition);
-    const toPoint = getConnectionPoint(toNode, connection.toPosition);
+    let fromPoint = getConnectionPoint(fromNode, connection.fromPosition);
+    let toPoint = getConnectionPoint(toNode, connection.toPosition);
+    
+    // Ajustar los puntos para que las flechas lleguen hasta el borde de los círculos de conexión
+    fromPoint = adjustPointForConnectionCircle(fromPoint, connection.fromPosition);
+    toPoint = adjustPointForConnectionCircle(toPoint, connection.toPosition);
     
     // Crear path SVG
     const pathId = `path-${connection.id}`;
@@ -686,6 +715,7 @@ function renderAllConnections() {
 
 /**
  * Obtiene las coordenadas de un punto de conexión de un nodo
+ * Los puntos de conexión están posicionados en el centro de los círculos visibles (16px de diámetro)
  */
 function getConnectionPoint(node, position) {
     const halfWidth = node.width / 2;
@@ -694,18 +724,23 @@ function getConnectionPoint(node, position) {
     let x = node.x + halfWidth;
     let y = node.y + halfHeight;
     
+    // Los puntos de conexión están en el centro de los círculos (8px desde el borde)
     switch (position) {
         case 'top':
-            y = node.y;
+            x = node.x + halfWidth;  // Centrado horizontalmente
+            y = node.y;              // En el borde superior
             break;
         case 'right':
-            x = node.x + node.width;
+            x = node.x + node.width; // En el borde derecho
+            y = node.y + halfHeight; // Centrado verticalmente
             break;
         case 'bottom':
-            y = node.y + node.height;
+            x = node.x + halfWidth;  // Centrado horizontalmente
+            y = node.y + node.height; // En el borde inferior
             break;
         case 'left':
-            x = node.x;
+            x = node.x;              // En el borde izquierdo
+            y = node.y + halfHeight; // Centrado verticalmente
             break;
     }
     
@@ -810,18 +845,76 @@ function handleConnectionPointMouseDown(e, node, position) {
     e.stopPropagation();
     e.preventDefault();
     
-    isConnecting = true;
-    connectionStart = { node: node, position: position };
-    
-    canvasContainer.style.cursor = 'crosshair';
+    // Cambiar a sistema de clics
+    if (!isConnecting) {
+        // Primer clic: iniciar conexión
+        isConnecting = true;
+        connectionStart = { node: node, position: position };
+        canvasContainer.style.cursor = 'crosshair';
+    } else if (connectionStart) {
+        // Segundo clic en un punto de conexión: completar conexión
+        const targetNode = node;
+        const targetPosition = position;
+        
+        if (targetNode.id !== connectionStart.node.id) {
+            createConnection(
+                connectionStart.node.id,
+                connectionStart.position,
+                targetNode.id,
+                targetPosition
+            );
+        }
+        
+        // Resetear estado
+        isConnecting = false;
+        connectionStart = null;
+        canvasContainer.style.cursor = '';
+        removeTemporaryConnection();
+        
+        // Remover hover-target si existe
+        if (hoveredNode) {
+            const hoveredEl = document.getElementById(hoveredNode.id);
+            if (hoveredEl) {
+                hoveredEl.classList.remove('hover-target');
+            }
+            hoveredNode = null;
+        }
+    }
 }
 
 function handleConnectionPointTouchStart(e, node, position) {
     e.stopPropagation();
     e.preventDefault();
     
-    isConnecting = true;
-    connectionStart = { node: node, position: position };
+    // Sistema de clics para touch
+    if (!isConnecting) {
+        isConnecting = true;
+        connectionStart = { node: node, position: position };
+    } else if (connectionStart) {
+        const targetNode = node;
+        const targetPosition = position;
+        
+        if (targetNode.id !== connectionStart.node.id) {
+            createConnection(
+                connectionStart.node.id,
+                connectionStart.position,
+                targetNode.id,
+                targetPosition
+            );
+        }
+        
+        isConnecting = false;
+        connectionStart = null;
+        removeTemporaryConnection();
+        
+        if (hoveredNode) {
+            const hoveredEl = document.getElementById(hoveredNode.id);
+            if (hoveredEl) {
+                hoveredEl.classList.remove('hover-target');
+            }
+            hoveredNode = null;
+        }
+    }
 }
 
 // ==================== MANEJO DE EVENTOS DEL CANVAS ====================
@@ -832,6 +925,23 @@ function handleCanvasMouseDown(e) {
     
     if (isCanvasBackground) {
         e.preventDefault();
+        
+        // Si está en modo de conexión, cancelar
+        if (isConnecting) {
+            isConnecting = false;
+            connectionStart = null;
+            canvasContainer.style.cursor = '';
+            removeTemporaryConnection();
+            
+            if (hoveredNode) {
+                const hoveredEl = document.getElementById(hoveredNode.id);
+                if (hoveredEl) {
+                    hoveredEl.classList.remove('hover-target');
+                }
+                hoveredNode = null;
+            }
+            return;
+        }
         
         // Deseleccionar nodos
         document.querySelectorAll('.flow-node.selected').forEach(n => n.classList.remove('selected'));
@@ -906,9 +1016,15 @@ function handleCanvasMouseMove(e) {
                         }
                     }
                     
-                    // Añadir highlight al nuevo nodo
+                    // Añadir highlight al nuevo nodo y mostrar sus puntos de conexión
                     hoveredNode = node;
                     nodeEl.classList.add('hover-target');
+                    
+                    // Mostrar los puntos de conexión del nodo destino
+                    const connectionPoints = nodeEl.querySelectorAll('.connection-point');
+                    connectionPoints.forEach(point => {
+                        point.style.display = 'flex';
+                    });
                 }
             }
         } else {
@@ -917,6 +1033,14 @@ function handleCanvasMouseMove(e) {
                 const prevNodeEl = document.getElementById(hoveredNode.id);
                 if (prevNodeEl) {
                     prevNodeEl.classList.remove('hover-target');
+                    
+                    // Ocultar puntos de conexión si el nodo no está seleccionado
+                    if (!prevNodeEl.classList.contains('selected')) {
+                        const connectionPoints = prevNodeEl.querySelectorAll('.connection-point');
+                        connectionPoints.forEach(point => {
+                            point.style.display = 'none';
+                        });
+                    }
                 }
                 hoveredNode = null;
             }
@@ -948,39 +1072,9 @@ function handleCanvasMouseUp(e) {
         }
         isDragging = false;
         saveToHistory();
-    } else if (isConnecting && connectionStart) {
-        // Si hay un nodo en hover, conectar a él
-        if (hoveredNode && hoveredNode.id !== connectionStart.node.id) {
-            // Calcular la posición del mouse en coordenadas del canvas
-            const rect = canvasContainer.getBoundingClientRect();
-            const mouseX = (e.clientX - rect.left - panOffset.x) / (currentZoom / 100);
-            const mouseY = (e.clientY - rect.top - panOffset.y) / (currentZoom / 100);
-            
-            // Encontrar el punto de conexión más cercano al mouse en el nodo destino
-            const targetPosition = getClosestConnectionPoint(hoveredNode, mouseX, mouseY);
-            
-            // Crear la conexión
-            createConnection(
-                connectionStart.node.id,
-                connectionStart.position,
-                hoveredNode.id,
-                targetPosition
-            );
-            
-            // Limpiar el highlight
-            const hoveredNodeEl = document.getElementById(hoveredNode.id);
-            if (hoveredNodeEl) {
-                hoveredNodeEl.classList.remove('hover-target');
-            }
-        }
-        
-        // Resetear el estado de conexión
-        isConnecting = false;
-        connectionStart = null;
-        hoveredNode = null;
-        removeTemporaryConnection();
-        canvasContainer.style.cursor = 'default';
     }
+    // Nota: La conexión ahora se completa con un clic en el punto de destino,
+    // no con mouseup. Ver handleConnectionPointMouseDown
 }
 
 function handleCanvasTouchStart(e) {
@@ -1053,40 +1147,9 @@ function handleCanvasTouchEnd(e) {
         }
         isDragging = false;
         saveToHistory();
-    } else if (isConnecting && connectionStart) {
-        const touch = e.changedTouches[0];
-        const rect = canvasContainer.getBoundingClientRect();
-        
-        // Calcular coordenadas del mouse en el canvas
-        const mouseX = (touch.clientX - rect.left) / (currentZoom / 100);
-        const mouseY = (touch.clientY - rect.top) / (currentZoom / 100);
-        
-        if (hoveredNode && hoveredNode.id !== connectionStart.node.id) {
-            // Usar el punto de conexión más cercano del nodo en hover
-            const closestPoint = getClosestConnectionPoint(hoveredNode, mouseX, mouseY);
-            
-            if (closestPoint) {
-                createConnection(
-                    connectionStart.node.id,
-                    connectionStart.position,
-                    hoveredNode.id,
-                    closestPoint
-                );
-            }
-        }
-        
-        // Limpiar el estado de hover
-        if (hoveredNode) {
-            const hoveredEl = document.getElementById(hoveredNode.id);
-            if (hoveredEl) {
-                hoveredEl.classList.remove('hover-target');
-            }
-            hoveredNode = null;
-        }
-        
-        isConnecting = false;
-        connectionStart = null;
     }
+    // Nota: La conexión ahora se completa con un clic en el punto de destino,
+    // no con touchend. Ver handleConnectionPointTouchStart
 }
 
 function handleCanvasWheel(e) {
@@ -1158,7 +1221,10 @@ function drawTemporaryConnection(e) {
         connectionLayer.appendChild(tempPath);
     }
     
-    const fromPoint = getConnectionPoint(connectionStart.node, connectionStart.position);
+    let fromPoint = getConnectionPoint(connectionStart.node, connectionStart.position);
+    // Ajustar el punto de inicio para que salga del borde del círculo
+    fromPoint = adjustPointForConnectionCircle(fromPoint, connectionStart.position);
+    
     const rect = canvasContainer.getBoundingClientRect();
     const toPoint = {
         x: (e.clientX - rect.left - panOffset.x) / (currentZoom / 100),
@@ -1383,6 +1449,24 @@ function restoreState(state) {
 // ==================== MANEJO DE TECLADO ====================
 
 function handleKeyDown(e) {
+    // Escape: Cancelar modo de conexión
+    if (e.key === 'Escape') {
+        if (isConnecting) {
+            isConnecting = false;
+            connectionStart = null;
+            canvasContainer.style.cursor = '';
+            removeTemporaryConnection();
+            
+            if (hoveredNode) {
+                const hoveredEl = document.getElementById(hoveredNode.id);
+                if (hoveredEl) {
+                    hoveredEl.classList.remove('hover-target');
+                }
+                hoveredNode = null;
+            }
+        }
+    }
+    
     // Ctrl+S: Guardar
     if (e.ctrlKey && e.key === 's') {
         e.preventDefault();

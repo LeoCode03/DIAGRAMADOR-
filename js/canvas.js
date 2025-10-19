@@ -275,6 +275,24 @@ function setupNodeMenu() {
             const nodeType = item.getAttribute('data-node-type');
             e.dataTransfer.setData('nodeType', nodeType);
             e.dataTransfer.effectAllowed = 'copy';
+            
+            // Crear una imagen de arrastre personalizada con el SVG del nodo
+            const img = item.querySelector('img');
+            if (img) {
+                const dragIcon = img.cloneNode(true);
+                dragIcon.style.width = '80px';
+                dragIcon.style.height = '80px';
+                dragIcon.style.position = 'absolute';
+                dragIcon.style.top = '-1000px'; // Ocultar fuera de la vista
+                document.body.appendChild(dragIcon);
+                
+                e.dataTransfer.setDragImage(dragIcon, 40, 40);
+                
+                // Eliminar el elemento temporal después de un momento
+                setTimeout(() => {
+                    document.body.removeChild(dragIcon);
+                }, 0);
+            }
         });
         
         // Click para agregar en el centro
@@ -355,14 +373,14 @@ function renderNode(node) {
     nodeEl.style.top = node.y + 'px';
     nodeEl.setAttribute('data-node-id', node.id);
     
-    // Contenido del nodo
+    // Usar el SVG directamente sin bordes ni contenedor visible
     let iconSrc = `icons/${node.type}.svg`;
     
     nodeEl.innerHTML = `
         <div class="node-delete-btn" onclick="deleteNode('${node.id}')">
             <img src="icons/cerrar.svg" alt="Eliminar">
         </div>
-        <img src="${iconSrc}" alt="" class="node-icon-display ${node.type === 'si' ? 'node-icon-diamond' : ''}">
+        <img src="${iconSrc}" alt="" class="node-svg-direct">
         <div class="node-content" contenteditable="true">${node.content}</div>
         <div class="connection-point top" data-position="top"></div>
         <div class="connection-point right" data-position="right"></div>
@@ -739,8 +757,8 @@ function handleCanvasMouseMove(e) {
         const x = (e.clientX - rect.left) / (currentZoom / 100) - dragOffset.x;
         const y = (e.clientY - rect.top) / (currentZoom / 100) - dragOffset.y;
         
-        selectedNode.x = Math.max(0, x);
-        selectedNode.y = Math.max(0, y);
+        selectedNode.x = x;
+        selectedNode.y = y;
         
         const nodeEl = document.getElementById(selectedNode.id);
         if (nodeEl) {
@@ -823,8 +841,8 @@ function handleCanvasTouchMove(e) {
         const x = (touch.clientX - rect.left) / (currentZoom / 100) - dragOffset.x;
         const y = (touch.clientY - rect.top) / (currentZoom / 100) - dragOffset.y;
         
-        selectedNode.x = Math.max(0, x);
-        selectedNode.y = Math.max(0, y);
+        selectedNode.x = x;
+        selectedNode.y = y;
         
         const nodeEl = document.getElementById(selectedNode.id);
         if (nodeEl) {
@@ -872,15 +890,14 @@ function handleCanvasTouchEnd(e) {
 }
 
 function handleCanvasWheel(e) {
-    if (e.ctrlKey) {
-        e.preventDefault();
-        
-        const delta = e.deltaY > 0 ? -10 : 10;
-        const newZoom = Math.min(250, Math.max(50, currentZoom + delta));
-        
-        applyZoom(newZoom);
-        markAsChanged();
-    }
+    // Zoom con scroll (sin necesidad de Ctrl)
+    e.preventDefault();
+    
+    const delta = e.deltaY > 0 ? -10 : 10;
+    const newZoom = Math.min(250, Math.max(50, currentZoom + delta));
+    
+    applyZoom(newZoom);
+    markAsChanged();
 }
 
 function handleDragOver(e) {

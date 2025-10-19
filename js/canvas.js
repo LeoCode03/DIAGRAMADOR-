@@ -17,6 +17,7 @@ let isSelecting = false; // Para selección de área
 let selectionStart = { x: 0, y: 0 };
 let selectionBox = null;
 let connectionStart = null;
+let hoveredNode = null; // Nodo sobre el que se hace hover durante la conexión
 let dragOffset = { x: 0, y: 0 };
 let panOffset = { x: 0, y: 0 };
 let panStart = { x: 0, y: 0 };
@@ -28,6 +29,7 @@ let originalDiagramName = '';
 let pendingNameChange = '';
 let clickCount = 0;
 let clickTimer = null;
+let isFitViewActive = false; // Para toggle entre ajuste y 100%
 
 // Historial para undo/redo
 let history = [];
@@ -376,16 +378,33 @@ function renderNode(node) {
     // Usar el SVG directamente sin bordes ni contenedor visible
     let iconSrc = `icons/${node.type}.svg`;
     
+    // Para nodo de decisión (si), solo mostrar puntos derecha e izquierda
+    let connectionPointsHTML = '';
+    if (node.type === 'si') {
+        connectionPointsHTML = `
+            <div class="connection-point right" data-position="right">
+                <span class="connection-label-si">Sí</span>
+            </div>
+            <div class="connection-point left" data-position="left">
+                <span class="connection-label-si">No</span>
+            </div>
+        `;
+    } else {
+        connectionPointsHTML = `
+            <div class="connection-point top" data-position="top"></div>
+            <div class="connection-point right" data-position="right"></div>
+            <div class="connection-point bottom" data-position="bottom"></div>
+            <div class="connection-point left" data-position="left"></div>
+        `;
+    }
+    
     nodeEl.innerHTML = `
         <div class="node-delete-btn" onclick="deleteNode('${node.id}')">
             <img src="icons/cerrar.svg" alt="Eliminar">
         </div>
         <img src="${iconSrc}" alt="" class="node-svg-direct">
         <div class="node-content" contenteditable="true">${node.content}</div>
-        <div class="connection-point top" data-position="top"></div>
-        <div class="connection-point right" data-position="right"></div>
-        <div class="connection-point bottom" data-position="bottom"></div>
-        <div class="connection-point left" data-position="left"></div>
+        ${connectionPointsHTML}
     `;
     
     // Event listeners del nodo
@@ -475,6 +494,7 @@ function addNodeAtCenter(nodeType) {
 function handleNodeMouseDown(e, node) {
     if (e.target.classList.contains('node-content') || 
         e.target.classList.contains('connection-point') ||
+        e.target.closest('.connection-point') ||
         e.target.closest('.node-delete-btn')) {
         return;
     }
@@ -516,7 +536,8 @@ function selectNode(node) {
 
 function handleNodeTouchStart(e, node) {
     if (e.target.classList.contains('node-content') || 
-        e.target.classList.contains('connection-point')) {
+        e.target.classList.contains('connection-point') ||
+        e.target.closest('.connection-point')) {
         return;
     }
     
@@ -540,10 +561,63 @@ function handleNodeTouchStart(e, node) {
 // ==================== GESTIÓN DE CONEXIONES ====================
 
 /**
+ * Calcula las mejores posiciones de conexión basándose en la posición relativa de los nodos
+ */
+function calculateBestConnectionPositions(fromNode, toNode) {
+    const fromCenterX = fromNode.x + fromNode.width / 2;
+    const fromCenterY = fromNode.y + fromNode.height / 2;
+    const toCenterX = toNode.x + toNode.width / 2;
+    const toCenterY = toNode.y + toNode.height / 2;
+    
+    const dx = toCenterX - fromCenterX;
+    const dy = toCenterY - fromCenterY;
+    
+    let fromPosition, toPosition;
+    
+    // Determinar la dirección predominante
+    if (Math.abs(dx) > Math.abs(dy)) {
+        // Movimiento horizontal predominante
+        if (dx > 0) {
+            // El nodo destino está a la derecha
+            fromPosition = 'right';
+            toPosition = 'left';
+        } else {
+            // El nodo destino está a la izquierda
+            fromPosition = 'left';
+            toPosition = 'right';
+        }
+    } else {
+        // Movimiento vertical predominante
+        if (dy > 0) {
+            // El nodo destino está abajo
+            fromPosition = 'bottom';
+            toPosition = 'top';
+        } else {
+            // El nodo destino está arriba
+            fromPosition = 'top';
+            toPosition = 'bottom';
+        }
+    }
+    
+    return { fromPosition, toPosition };
+}
+
+/**
  * Crea una nueva conexión
  */
 function createConnection(fromNodeId, fromPosition, toNodeId, toPosition, label = '') {
     connectionCounter++;
+    
+    // Obtener los nodos
+    const fromNode = nodes.find(n => n.id === fromNodeId);
+    const toNode = nodes.find(n => n.id === toNodeId);
+    
+    // Si los nodos existen, calcular las mejores posiciones de conexión automáticamente
+    if (fromNode && toNode) {
+        const bestPositions = calculateBestConnectionPositions(fromNode, toNode);
+        fromPosition = bestPositions.fromPosition;
+        toPosition = bestPositions.toPosition;
+    }
     
     const connection = {
         id: `c-${connectionCounter}`,
@@ -639,18 +713,60 @@ function getConnectionPoint(node, position) {
 }
 
 /**
+ * Calcula el punto de conexión más cercano a una posición dada
+ */
+function getClosestConnectionPoint(node, mouseX, mouseY) {
+    const positions = ['top', 'right', 'bottom', 'left'];
+    
+    // Para nodos tipo 'si', solo usar right y left
+    const validPositions = node.type === 'si' ? ['right', 'left'] : positions;
+    
+    let closestPosition = validPositions[0];
+    let minDistance = Infinity;
+    
+    validPositions.forEach(position => {
+        const point = getConnectionPoint(node, position);
+        const distance = Math.sqrt(
+            Math.pow(point.x - mouseX, 2) + 
+            Math.pow(point.y - mouseY, 2)
+        );
+        
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestPosition = position;
+        }
+    });
+    
+    return closestPosition;
+}
+
+/**
  * Crea un path curvo entre dos puntos
  */
 function createCurvePath(from, to) {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     
-    // Usar curvas bezier para conexiones suaves
-    const curvature = 0.3;
-    const cx1 = from.x + dx * curvature;
-    const cy1 = from.y;
-    const cx2 = to.x - dx * curvature;
-    const cy2 = to.y;
+    // Determinar si la conexión es más horizontal o vertical
+    const isHorizontal = Math.abs(dx) > Math.abs(dy);
+    
+    let cx1, cy1, cx2, cy2;
+    
+    if (isHorizontal) {
+        // Curva horizontal - los puntos de control se mueven horizontalmente
+        const offset = Math.abs(dx) * 0.5;
+        cx1 = from.x + (dx > 0 ? offset : -offset);
+        cy1 = from.y;
+        cx2 = to.x - (dx > 0 ? offset : -offset);
+        cy2 = to.y;
+    } else {
+        // Curva vertical - los puntos de control se mueven verticalmente
+        const offset = Math.abs(dy) * 0.5;
+        cx1 = from.x;
+        cy1 = from.y + (dy > 0 ? offset : -offset);
+        cx2 = to.x;
+        cy2 = to.y - (dy > 0 ? offset : -offset);
+    }
     
     return `M ${from.x} ${from.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${to.x} ${to.y}`;
 }
@@ -770,18 +886,53 @@ function handleCanvasMouseMove(e) {
         updateNodeConnections(selectedNode.id);
         markAsChanged();
     } else if (isConnecting && connectionStart) {
+        // Detectar si el mouse está sobre un nodo
+        const target = e.target;
+        const nodeEl = target.closest('.flow-node');
+        
+        if (nodeEl) {
+            const nodeId = nodeEl.getAttribute('data-node-id');
+            const node = nodes.find(n => n.id === nodeId);
+            
+            // Si es un nodo diferente al de origen
+            if (node && node.id !== connectionStart.node.id) {
+                // Si es un nodo diferente al que teníamos en hover
+                if (!hoveredNode || hoveredNode.id !== node.id) {
+                    // Remover highlight del nodo anterior
+                    if (hoveredNode) {
+                        const prevNodeEl = document.getElementById(hoveredNode.id);
+                        if (prevNodeEl) {
+                            prevNodeEl.classList.remove('hover-target');
+                        }
+                    }
+                    
+                    // Añadir highlight al nuevo nodo
+                    hoveredNode = node;
+                    nodeEl.classList.add('hover-target');
+                }
+            }
+        } else {
+            // El mouse no está sobre ningún nodo, remover highlight
+            if (hoveredNode) {
+                const prevNodeEl = document.getElementById(hoveredNode.id);
+                if (prevNodeEl) {
+                    prevNodeEl.classList.remove('hover-target');
+                }
+                hoveredNode = null;
+            }
+        }
+        
         // Mostrar línea temporal mientras se crea la conexión
         drawTemporaryConnection(e);
     }
 }
 
 function handleCanvasDoubleClick(e) {
-    // Doble clic en el canvas vacío para iniciar selección múltiple
+    // Doble clic en el canvas vacío - sin acción especial
     const isCanvasBackground = e.target === canvasContainer || e.target === nodeLayer || e.target.closest('.connection-layer');
     
     if (isCanvasBackground) {
         e.preventDefault();
-        showNotification('Mantén presionado y arrastra para seleccionar múltiples nodos (próximamente)', 'info', 2000);
     }
 }
 
@@ -798,28 +949,35 @@ function handleCanvasMouseUp(e) {
         isDragging = false;
         saveToHistory();
     } else if (isConnecting && connectionStart) {
-        // Verificar si se soltó sobre un punto de conexión
-        const target = e.target;
-        if (target.classList.contains('connection-point')) {
-            const nodeEl = target.closest('.flow-node');
-            if (nodeEl) {
-                const targetNodeId = nodeEl.getAttribute('data-node-id');
-                const targetPosition = target.getAttribute('data-position');
-                
-                // No permitir conexiones del mismo nodo a sí mismo
-                if (targetNodeId !== connectionStart.node.id) {
-                    createConnection(
-                        connectionStart.node.id,
-                        connectionStart.position,
-                        targetNodeId,
-                        targetPosition
-                    );
-                }
+        // Si hay un nodo en hover, conectar a él
+        if (hoveredNode && hoveredNode.id !== connectionStart.node.id) {
+            // Calcular la posición del mouse en coordenadas del canvas
+            const rect = canvasContainer.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left - panOffset.x) / (currentZoom / 100);
+            const mouseY = (e.clientY - rect.top - panOffset.y) / (currentZoom / 100);
+            
+            // Encontrar el punto de conexión más cercano al mouse en el nodo destino
+            const targetPosition = getClosestConnectionPoint(hoveredNode, mouseX, mouseY);
+            
+            // Crear la conexión
+            createConnection(
+                connectionStart.node.id,
+                connectionStart.position,
+                hoveredNode.id,
+                targetPosition
+            );
+            
+            // Limpiar el highlight
+            const hoveredNodeEl = document.getElementById(hoveredNode.id);
+            if (hoveredNodeEl) {
+                hoveredNodeEl.classList.remove('hover-target');
             }
         }
         
+        // Resetear el estado de conexión
         isConnecting = false;
         connectionStart = null;
+        hoveredNode = null;
         removeTemporaryConnection();
         canvasContainer.style.cursor = 'default';
     }
@@ -852,6 +1010,38 @@ function handleCanvasTouchMove(e) {
         
         updateNodeConnections(selectedNode.id);
         markAsChanged();
+    } else if (isConnecting && connectionStart && e.touches.length === 1) {
+        // Detectar hover en modo de conexión para touch
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const nodeEl = target ? target.closest('.flow-node') : null;
+        
+        if (nodeEl) {
+            const nodeId = nodeEl.getAttribute('data-node-id');
+            const node = nodes.find(n => n.id === nodeId);
+            
+            if (node && node.id !== connectionStart.node.id) {
+                // Nuevo nodo en hover
+                if (!hoveredNode || hoveredNode.id !== node.id) {
+                    // Remover hover anterior
+                    if (hoveredNode) {
+                        const prevEl = document.getElementById(hoveredNode.id);
+                        if (prevEl) prevEl.classList.remove('hover-target');
+                    }
+                    
+                    // Agregar hover al nuevo nodo
+                    hoveredNode = node;
+                    nodeEl.classList.add('hover-target');
+                }
+            }
+        } else {
+            // No hay nodo bajo el cursor, limpiar hover
+            if (hoveredNode) {
+                const prevEl = document.getElementById(hoveredNode.id);
+                if (prevEl) prevEl.classList.remove('hover-target');
+                hoveredNode = null;
+            }
+        }
     }
 }
 
@@ -865,23 +1055,33 @@ function handleCanvasTouchEnd(e) {
         saveToHistory();
     } else if (isConnecting && connectionStart) {
         const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const rect = canvasContainer.getBoundingClientRect();
         
-        if (target && target.classList.contains('connection-point')) {
-            const nodeEl = target.closest('.flow-node');
-            if (nodeEl) {
-                const targetNodeId = nodeEl.getAttribute('data-node-id');
-                const targetPosition = target.getAttribute('data-position');
-                
-                if (targetNodeId !== connectionStart.node.id) {
-                    createConnection(
-                        connectionStart.node.id,
-                        connectionStart.position,
-                        targetNodeId,
-                        targetPosition
-                    );
-                }
+        // Calcular coordenadas del mouse en el canvas
+        const mouseX = (touch.clientX - rect.left) / (currentZoom / 100);
+        const mouseY = (touch.clientY - rect.top) / (currentZoom / 100);
+        
+        if (hoveredNode && hoveredNode.id !== connectionStart.node.id) {
+            // Usar el punto de conexión más cercano del nodo en hover
+            const closestPoint = getClosestConnectionPoint(hoveredNode, mouseX, mouseY);
+            
+            if (closestPoint) {
+                createConnection(
+                    connectionStart.node.id,
+                    connectionStart.position,
+                    hoveredNode.id,
+                    closestPoint
+                );
             }
+        }
+        
+        // Limpiar el estado de hover
+        if (hoveredNode) {
+            const hoveredEl = document.getElementById(hoveredNode.id);
+            if (hoveredEl) {
+                hoveredEl.classList.remove('hover-target');
+            }
+            hoveredNode = null;
         }
         
         isConnecting = false;
@@ -897,6 +1097,7 @@ function handleCanvasWheel(e) {
     const newZoom = Math.min(250, Math.max(50, currentZoom + delta));
     
     applyZoom(newZoom);
+    isFitViewActive = false; // Resetear cuando se usa scroll
     markAsChanged();
 }
 
@@ -925,6 +1126,16 @@ function handleDrop(e) {
 function updateNodeConnections(nodeId) {
     connections.forEach(connection => {
         if (connection.from === nodeId || connection.to === nodeId) {
+            // Recalcular las posiciones óptimas de conexión
+            const fromNode = nodes.find(n => n.id === connection.from);
+            const toNode = nodes.find(n => n.id === connection.to);
+            
+            if (fromNode && toNode) {
+                const bestPositions = calculateBestConnectionPositions(fromNode, toNode);
+                connection.fromPosition = bestPositions.fromPosition;
+                connection.toPosition = bestPositions.toPosition;
+            }
+            
             renderConnection(connection);
         }
     });
@@ -982,6 +1193,7 @@ function setupZoomControls() {
     zoomSlider.addEventListener('input', (e) => {
         const zoom = parseInt(e.target.value);
         applyZoom(zoom);
+        isFitViewActive = false; // Resetear cuando el usuario cambia el zoom manualmente
     });
     
     zoomSlider.addEventListener('change', () => {
@@ -991,17 +1203,32 @@ function setupZoomControls() {
     btnZoomIn.addEventListener('click', () => {
         const newZoom = Math.min(250, currentZoom + 10);
         applyZoom(newZoom);
+        isFitViewActive = false; // Resetear
         markAsChanged();
     });
     
     btnZoomOut.addEventListener('click', () => {
         const newZoom = Math.max(50, currentZoom - 10);
         applyZoom(newZoom);
+        isFitViewActive = false; // Resetear
         markAsChanged();
     });
     
     btnFitView.addEventListener('click', () => {
-        fitToView();
+        if (isFitViewActive) {
+            // Si ya está ajustado, volver a 100%
+            applyZoom(100);
+            panOffset.x = 0;
+            panOffset.y = 0;
+            applyPan();
+            isFitViewActive = false;
+            showNotification('Zoom restaurado a 100%', 'info', 1500);
+        } else {
+            // Ajustar a los nodos
+            fitToView();
+            isFitViewActive = true;
+        }
+        markAsChanged();
     });
     
     btnUndo.addEventListener('click', undo);

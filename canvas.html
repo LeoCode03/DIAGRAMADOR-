@@ -48,23 +48,23 @@
         </div>
         <div class="node-menu-items w3-padding">
             <div class="node-item" data-node-type="inicio" draggable="true">
-                <img src="icons/inicio.svg" alt="" class="node-icon">
+                <div class="node-preview inicio"></div>
                 <span>Inicio</span>
             </div>
             <div class="node-item" data-node-type="fin" draggable="true">
-                <img src="icons/fin.svg" alt="" class="node-icon">
+                <div class="node-preview fin"></div>
                 <span>Fin</span>
             </div>
             <div class="node-item" data-node-type="asignacion" draggable="true">
-                <img src="icons/asignacion.svg" alt="" class="node-icon">
+                <div class="node-preview asignacion"></div>
                 <span>Asignación</span>
             </div>
             <div class="node-item" data-node-type="si" draggable="true">
-                <img src="icons/si.svg" alt="" class="node-icon node-icon-diamond">
+                <div class="node-preview si"></div>
                 <span>Decisión</span>
             </div>
             <div class="node-item" data-node-type="comentario" draggable="true">
-                <img src="icons/comentario.svg" alt="" class="node-icon">
+                <div class="node-preview comentario"></div>
                 <span>Comentario</span>
             </div>
         </div>
@@ -72,10 +72,10 @@
 
     <!-- Canvas principal -->
     <main id="canvasContainer" class="canvas-container">
-        <svg id="connectionLayer" class="connection-layer">
+        <svg id="connectionLayer" class="connection-layer" style="overflow: visible;">
             <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                    <polygon points="0 0, 10 3, 0 6" fill="#333" />
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                    <polygon points="0 0, 10 3, 0 6" fill="#2C3E50" />
                 </marker>
             </defs>
         </svg>

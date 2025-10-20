@@ -184,13 +184,12 @@ async function exportDiagram(id) {
     const diagram = await getDiagram(id);
     
     // Crear copia limpia sin propiedades internas de PouchDB
+    // Excluimos 'type' y 'schemaVersion' de la exportación
     const exportData = {
         _id: diagram._id,
-        type: diagram.type,
         name: diagram.name,
         createdAt: diagram.createdAt,
         updatedAt: diagram.updatedAt,
-        schemaVersion: diagram.schemaVersion,
         nodes: diagram.nodes,
         connections: diagram.connections,
         metadata: diagram.metadata
@@ -212,6 +211,14 @@ async function importDiagram(jsonString, mode = 'create') {
         // Validar estructura
         if (!validateDiagramSchema(diagram)) {
             throw new Error('El archivo JSON no tiene un formato válido');
+        }
+        
+        // Agregar propiedades necesarias si no existen
+        if (!diagram.type) {
+            diagram.type = 'diagram';
+        }
+        if (!diagram.schemaVersion) {
+            diagram.schemaVersion = 1;
         }
         
         // Verificar si ya existe
@@ -280,7 +287,6 @@ async function diagramExists(id) {
 function validateDiagramSchema(diagram) {
     return diagram &&
         diagram._id &&
-        diagram.type === 'diagram' &&
         diagram.name &&
         diagram.createdAt &&
         diagram.updatedAt &&

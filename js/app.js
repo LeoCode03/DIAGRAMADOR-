@@ -246,9 +246,9 @@ async function handleFileImport(event) {
                 'Diagrama existente',
                 `Ya existe un diagrama con el mismo identificador. ¿Qué desea hacer?`,
                 [
-                    { text: 'Crear una copia', value: 'create', class: 'w3-button w3-block w3-margin-bottom', style: 'background-color: #00C1BA; color: white;' },
-                    { text: 'Reemplazar el existente', value: 'replace', class: 'w3-button w3-block w3-margin-bottom', style: 'background-color: #FFB84D; color: white;' },
-                    { text: 'Cancelar', value: 'cancel', class: 'w3-button w3-white w3-border w3-block', style: 'border-color: #95A5A6; color: #95A5A6;' }
+                    { text: 'Crear una copia', value: 'create', class: 'w3-button w3-block w3-margin-bottom' },
+                    { text: 'Reemplazar el existente', value: 'replace', class: 'w3-button w3-block w3-margin-bottom' },
+                    { text: 'Cancelar', value: 'cancel', class: 'w3-button', style: 'background-color: #FF6B6B; color: white; width: 25%; margin: 0 auto; display: block; border-radius: 8px;' }
                 ],
                 async (mode) => {
                     if (mode !== 'cancel') {

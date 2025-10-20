@@ -128,8 +128,9 @@ function closeConfirmModal() {
  * @param {string} title - Título del modal
  * @param {string} content - Contenido HTML del modal
  * @param {Array} buttons - Array de objetos {text, class, onClick}
+ * @param {boolean} showCloseButton - Mostrar botón X de cerrar (default: true)
  */
-function showCustomModal(title, content, buttons = []) {
+function showCustomModal(title, content, buttons = [], showCloseButton = true) {
     // Crear modal si no existe
     let modal = document.getElementById('customModal');
     if (!modal) {
@@ -139,7 +140,7 @@ function showCustomModal(title, content, buttons = []) {
         modal.innerHTML = `
             <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width: 500px;">
                 <div class="w3-container" style="background-color: #00C1BA; color: white;">
-                    <span class="w3-button w3-display-topright w3-hover-red" onclick="closeCustomModal()">&times;</span>
+                    <span id="customModalCloseBtn" class="w3-button w3-display-topright w3-hover-red" onclick="closeCustomModal()">&times;</span>
                     <h3 id="customModalTitle"></h3>
                 </div>
                 <div class="w3-container w3-padding" id="customModalContent"></div>
@@ -151,6 +152,12 @@ function showCustomModal(title, content, buttons = []) {
     
     document.getElementById('customModalTitle').textContent = title;
     document.getElementById('customModalContent').innerHTML = content;
+    
+    // Mostrar u ocultar botón de cerrar
+    const closeBtn = document.getElementById('customModalCloseBtn');
+    if (closeBtn) {
+        closeBtn.style.display = showCloseButton ? 'block' : 'none';
+    }
     
     // Agregar botones
     const buttonsContainer = document.getElementById('customModalButtons');
@@ -245,6 +252,7 @@ function showOptionsDialog(title, message, options, onSelect) {
         <div class="w3-margin-top">
             ${options.map((opt, idx) => `
                 <button class="${opt.class || 'w3-button w3-white w3-border w3-block w3-margin-bottom'}" 
+                        ${opt.style ? `style="${opt.style}"` : ''}
                         data-value="${opt.value}" 
                         onclick="selectOption(${idx})">
                     ${opt.text}
@@ -261,9 +269,9 @@ function showOptionsDialog(title, message, options, onSelect) {
         closeCustomModal();
     };
     
-    showCustomModal(title, content, [
-        { text: 'Cancelar', class: 'w3-button w3-border w3-round', onClick: () => {} }
-    ]);
+    // No agregamos botones adicionales porque las opciones ya incluyen "Cancelar"
+    // No mostramos el botón X porque ya hay un botón "Cancelar" explícito
+    showCustomModal(title, content, [], false);
 }
 
 /**

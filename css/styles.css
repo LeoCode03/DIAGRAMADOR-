@@ -322,13 +322,49 @@ body {
     cursor: grabbing;
 }
 
-.node-icon {
-    width: 40px;
-    height: 40px;
+/* Previsualizaciones de nodos en el sidebar */
+.node-preview {
+    width: 45px;
+    height: 45px;
+    position: relative;
+    flex-shrink: 0;
 }
 
-.node-icon-diamond {
+.node-preview::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.node-preview.inicio::before {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    border-radius: 50%;
+}
+
+.node-preview.asignacion::before {
+    background: linear-gradient(135deg, #3498db, #5dade2);
+    border-radius: 8px;
+}
+
+.node-preview.si::before {
+    background: linear-gradient(135deg, #f39c12, #f1c40f);
     transform: rotate(45deg);
+    border-radius: 8px;
+}
+
+.node-preview.fin::before {
+    background: linear-gradient(135deg, #e74c3c, #ec7063);
+    border-radius: 50%;
+}
+
+.node-preview.comentario::before {
+    background: linear-gradient(135deg, #16a085, #1abc9c);
+    border-radius: 4px;
+    clip-path: polygon(0% 0%, 85% 0%, 100% 15%, 100% 100%, 0% 100%);
 }
 
 /* ==================== CANVAS ==================== */
@@ -360,6 +396,7 @@ body {
     height: 100%;
     pointer-events: none;
     z-index: 1;
+    overflow: visible;
 }
 
 .connection-layer path {
@@ -407,6 +444,62 @@ body {
     justify-content: center;
     padding: 0;
     transition: none;
+    position: relative;
+}
+
+/* Formas base para cada tipo de nodo */
+.flow-node::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Inicio - Óvalo verde */
+.flow-node.inicio::before {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    border-radius: 50%;
+}
+
+/* Proceso - Rectángulo azul */
+.flow-node.asignacion::before {
+    background: linear-gradient(135deg, #3498db, #5dade2);
+    border-radius: 8px;
+}
+
+/* Decisión - Rombo amarillo/naranja */
+.flow-node.si {
+    width: calc(var(--node-size) * 0.9);
+    height: calc(var(--node-size) * 0.9);
+}
+
+.flow-node.si::before {
+    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    transform: rotate(45deg);
+    border-radius: 8px;
+}
+
+/* Fin - Óvalo rojo */
+.flow-node.fin::before {
+    background: linear-gradient(135deg, #e74c3c, #ec7063);
+    border-radius: 50%;
+}
+
+/* Comentario - Rectángulo con esquina doblada cyan */
+.flow-node.comentario::before {
+    background: linear-gradient(135deg, #16a085, #1abc9c);
+    border-radius: 4px;
+    clip-path: polygon(0% 0%, 85% 0%, 100% 15%, 100% 100%, 0% 100%);
+}
+
+/* Ajuste específico del contenido del nodo si (por la rotación) */
+.flow-node.si .node-content {
+    transform: none;
+    z-index: 2;
 }
 
 .flow-node:hover {
@@ -438,80 +531,27 @@ body {
     cursor: grabbing;
 }
 
-.flow-node.inicio,
-.flow-node.fin {
-    border-radius: 0;
-}
-
-.flow-node.si {
-    border-radius: 0;
-    width: calc(var(--node-size) * 0.9);
-    height: calc(var(--node-size) * 0.9);
-}
-
-.flow-node.si .node-content {
-    transform: none;
-}
-
-.flow-node.si .node-svg-direct {
-    transform: rotate(45deg);
-}
-
-.flow-node.comentario {
-    border: none;
-}
-
-.node-svg-direct {
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 0;
-}
-
-.node-svg-shape {
-    position: absolute;
-    width: 80%;
-    height: 80%;
-    top: 10%;
-    left: 10%;
-    pointer-events: none;
-    z-index: 0;
-}
-
-.node-icon-display {
-    width: 35px;
-    height: 35px;
-    margin-bottom: 8px;
-}
-
 .node-content {
     text-align: center;
     word-wrap: break-word;
     font-size: 0.9rem;
-    color: var(--text-dark);
+    color: white;
+    font-weight: 600;
     max-width: 90%;
     outline: none;
     cursor: text;
-    position: absolute;
-    z-index: 1;
+    position: relative;
+    z-index: 2;
     background: transparent;
     padding: 4px 8px;
     border-radius: 4px;
     pointer-events: auto;
-}
-
-/* Texto blanco para nodo fin */
-.flow-node.fin .node-content {
-    color: white;
-    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 .node-content:empty:before {
     content: 'Texto...';
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .node-delete-btn {
@@ -578,13 +618,18 @@ body {
     border-radius: 50%;
     cursor: crosshair;
     display: none;
+    opacity: 0;
     transition: all 0.2s;
     z-index: 10;
     pointer-events: all;
 }
 
+/* Mostrar puntos al hacer hover o cuando se selecciona el nodo */
+.flow-node:hover .connection-point,
+.flow-node.show-connection-points .connection-point,
 .flow-node.selected .connection-point {
     display: block;
+    opacity: 1;
 }
 
 .connection-point.top {
@@ -593,10 +638,20 @@ body {
     transform: translateX(-50%);
 }
 
+.connection-point.top:hover {
+    background: var(--secondary-color);
+    transform: translateX(-50%) scale(1.3);
+}
+
 .connection-point.right {
     top: 50%;
     right: -8px;
     transform: translateY(-50%);
+}
+
+.connection-point.right:hover {
+    background: var(--secondary-color);
+    transform: translateY(-50%) scale(1.3);
 }
 
 .connection-point.bottom {
@@ -605,15 +660,35 @@ body {
     transform: translateX(-50%);
 }
 
+.connection-point.bottom:hover {
+    background: var(--secondary-color);
+    transform: translateX(-50%) scale(1.3);
+}
+
 .connection-point.left {
     top: 50%;
     left: -8px;
     transform: translateY(-50%);
 }
 
-.connection-point:hover {
+.connection-point.left:hover {
     background: var(--secondary-color);
-    transform: scale(1.3) translate(-50%, -50%);
+    transform: translateY(-50%) scale(1.3);
+}
+
+/* Destacar puntos de conexión cuando están en hover durante arrastre */
+.connection-point.connection-hover {
+    display: block !important;
+    box-shadow: 0 0 5px 2px var(--accent-color);
+    background: var(--secondary-color);
+    animation: pulse 1s infinite;
+}
+
+/* Animación para puntos de conexión en hover durante conexión */
+@keyframes pulse {
+    0% { transform: scale(1.2) translate(-50%, -50%); box-shadow: 0 0 5px 2px var(--accent-color); }
+    50% { transform: scale(1.4) translate(-50%, -50%); box-shadow: 0 0 10px 3px var(--accent-color); }
+    100% { transform: scale(1.2) translate(-50%, -50%); box-shadow: 0 0 5px 2px var(--accent-color); }
 }
 
 /* Etiquetas de conexión para nodo de decisión */

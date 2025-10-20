@@ -18,6 +18,8 @@ let selectionStart = { x: 0, y: 0 };
 let selectionBox = null;
 let connectionStart = null;
 let hoveredNode = null; // Nodo sobre el que se hace hover durante la conexión
+let isDraggingArrowHead = false; // Para arrastrar la cabeza de una flecha
+let draggingConnection = null; // Conexión cuya cabeza se está arrastrando
 let dragOffset = { x: 0, y: 0 };
 let panOffset = { x: 0, y: 0 };
 let panStart = { x: 0, y: 0 };
@@ -378,7 +380,7 @@ function renderNode(node) {
     // Usar el SVG directamente sin bordes ni contenedor visible
     let iconSrc = `icons/${node.type}.svg`;
     
-    // Para nodo de decisión (si), solo mostrar puntos derecha e izquierda
+    // Para nodo de decisión (si), mostrar puntos derecha, izquierda y top (que se ve abajo por la rotación)
     let connectionPointsHTML = '';
     if (node.type === 'si') {
         connectionPointsHTML = `
@@ -388,6 +390,7 @@ function renderNode(node) {
             <div class="connection-point left" data-position="left">
                 <span class="connection-label-si">No</span>
             </div>
+            <div class="connection-point top" data-position="top"></div>
         `;
     } else {
         connectionPointsHTML = `
@@ -608,17 +611,6 @@ function calculateBestConnectionPositions(fromNode, toNode) {
 function createConnection(fromNodeId, fromPosition, toNodeId, toPosition, label = '') {
     connectionCounter++;
     
-    // Obtener los nodos
-    const fromNode = nodes.find(n => n.id === fromNodeId);
-    const toNode = nodes.find(n => n.id === toNodeId);
-    
-    // Si los nodos existen, calcular las mejores posiciones de conexión automáticamente
-    if (fromNode && toNode) {
-        const bestPositions = calculateBestConnectionPositions(fromNode, toNode);
-        fromPosition = bestPositions.fromPosition;
-        toPosition = bestPositions.toPosition;
-    }
-    
     const connection = {
         id: `c-${connectionCounter}`,
         from: fromNodeId,
@@ -699,15 +691,50 @@ function renderConnection(connection) {
         
         connectionLayer.appendChild(path);
     }
+    
+    // Crear o actualizar círculo arrastrable en la cabeza de la flecha
+    const arrowHeadId = `arrowhead-handle-${connection.id}`;
+    let arrowHeadHandle = document.getElementById(arrowHeadId);
+    
+    if (!arrowHeadHandle) {
+        arrowHeadHandle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        arrowHeadHandle.setAttribute('id', arrowHeadId);
+        arrowHeadHandle.setAttribute('r', '8');
+        arrowHeadHandle.setAttribute('data-connection-id', connection.id);
+        arrowHeadHandle.style.fill = '#3498db';
+        arrowHeadHandle.style.stroke = 'white';
+        arrowHeadHandle.style.strokeWidth = '2';
+        arrowHeadHandle.style.cursor = 'move';
+        arrowHeadHandle.style.opacity = '0';
+        arrowHeadHandle.style.transition = 'opacity 0.2s';
+        
+        // Eventos para arrastrar
+        arrowHeadHandle.addEventListener('mouseenter', () => {
+            arrowHeadHandle.style.opacity = '1';
+        });
+        arrowHeadHandle.addEventListener('mouseleave', () => {
+            arrowHeadHandle.style.opacity = '0';
+        });
+        arrowHeadHandle.addEventListener('mousedown', (e) => handleArrowHeadMouseDown(e, connection));
+        
+        connectionLayer.appendChild(arrowHeadHandle);
+    }
+    
+    // Posicionar el círculo en la punta de la flecha
+    arrowHeadHandle.setAttribute('cx', toPoint.x);
+    arrowHeadHandle.setAttribute('cy', toPoint.y);
 }
 
 /**
  * Renderiza todas las conexiones
  */
 function renderAllConnections() {
-    // Limpiar paths existentes
+    // Limpiar paths y handles existentes
     const paths = connectionLayer.querySelectorAll('path');
     paths.forEach(path => path.remove());
+    
+    const handles = connectionLayer.querySelectorAll('circle[id^="arrowhead-handle-"]');
+    handles.forEach(handle => handle.remove());
     
     // Re-renderizar todas
     connections.forEach(connection => renderConnection(connection));
@@ -753,8 +780,8 @@ function getConnectionPoint(node, position) {
 function getClosestConnectionPoint(node, mouseX, mouseY) {
     const positions = ['top', 'right', 'bottom', 'left'];
     
-    // Para nodos tipo 'si', solo usar right y left
-    const validPositions = node.type === 'si' ? ['right', 'left'] : positions;
+    // Para nodos tipo 'si', usar right, left y top (top se ve abajo por la rotación de 45°)
+    const validPositions = node.type === 'si' ? ['right', 'left', 'top'] : positions;
     
     let closestPosition = validPositions[0];
     let minDistance = Infinity;
@@ -814,11 +841,47 @@ function selectConnection(connection) {
     const paths = connectionLayer.querySelectorAll('path');
     paths.forEach(p => p.classList.remove('selected'));
     
+    // Remover botón de eliminar anterior si existe
+    const existingBtn = document.getElementById('connection-delete-btn');
+    if (existingBtn) {
+        existingBtn.remove();
+    }
+    
     // Seleccionar actual
     const path = document.getElementById(`path-${connection.id}`);
     if (path) {
         path.classList.add('selected');
         selectedConnection = connection;
+        
+        // Crear botón de eliminar en el punto medio de la conexión
+        const fromNode = nodes.find(n => n.id === connection.from);
+        const toNode = nodes.find(n => n.id === connection.to);
+        
+        if (fromNode && toNode) {
+            const fromPoint = getConnectionPoint(fromNode, connection.fromPosition);
+            const toPoint = getConnectionPoint(toNode, connection.toPosition);
+            
+            // Calcular punto medio
+            const midX = (fromPoint.x + toPoint.x) / 2;
+            const midY = (fromPoint.y + toPoint.y) / 2;
+            
+            // Crear botón de eliminar
+            const deleteBtn = document.createElement('button');
+            deleteBtn.id = 'connection-delete-btn';
+            deleteBtn.className = 'connection-delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.title = 'Eliminar conexión';
+            deleteBtn.style.left = midX + 'px';
+            deleteBtn.style.top = midY + 'px';
+            
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteConnection(connection.id);
+                deleteBtn.remove();
+            });
+            
+            nodeLayer.appendChild(deleteBtn);
+        }
     }
 }
 
@@ -833,9 +896,27 @@ function deleteConnection(connectionId) {
         path.remove();
     }
     
+    // Eliminar también el handle de la cabeza
+    const handle = document.getElementById(`arrowhead-handle-${connectionId}`);
+    if (handle) {
+        handle.remove();
+    }
+    
     selectedConnection = null;
     markAsChanged();
     saveToHistory();
+}
+
+/**
+ * Maneja el inicio del arrastre de la cabeza de una flecha
+ */
+function handleArrowHeadMouseDown(e, connection) {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    isDraggingArrowHead = true;
+    draggingConnection = connection;
+    canvasContainer.style.cursor = 'move';
 }
 
 /**
@@ -969,6 +1050,12 @@ function handleCanvasMouseDown(e) {
         
         const selectedPaths = connectionLayer.querySelectorAll('path.selected');
         selectedPaths.forEach(p => p.classList.remove('selected'));
+        
+        // Remover botón de eliminar conexión si existe
+        const connectionDeleteBtn = document.getElementById('connection-delete-btn');
+        if (connectionDeleteBtn) {
+            connectionDeleteBtn.remove();
+        }
     }
 }
 
@@ -978,6 +1065,58 @@ function handleCanvasMouseMove(e) {
         panOffset.y = e.clientY - panStart.y;
         applyPan();
         markAsChanged();
+    } else if (isDraggingArrowHead && draggingConnection) {
+        // Arrastrar la cabeza de la flecha
+        const rect = canvasContainer.getBoundingClientRect();
+        const mouseX = (e.clientX - rect.left - panOffset.x) / (currentZoom / 100);
+        const mouseY = (e.clientY - rect.top - panOffset.y) / (currentZoom / 100);
+        
+        // Actualizar la posición temporal del handle
+        const handle = document.getElementById(`arrowhead-handle-${draggingConnection.id}`);
+        if (handle) {
+            handle.setAttribute('cx', mouseX);
+            handle.setAttribute('cy', mouseY);
+        }
+        
+        // Actualizar la línea temporal
+        const fromNode = nodes.find(n => n.id === draggingConnection.from);
+        if (fromNode) {
+            let fromPoint = getConnectionPoint(fromNode, draggingConnection.fromPosition);
+            fromPoint = adjustPointForConnectionCircle(fromPoint, draggingConnection.fromPosition);
+            
+            const path = document.getElementById(`path-${draggingConnection.id}`);
+            if (path) {
+                const pathData = createCurvePath(fromPoint, { x: mouseX, y: mouseY });
+                path.setAttribute('d', pathData);
+            }
+        }
+        
+        // Detectar hover sobre nodos para reconexión
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        const nodeEl = target ? target.closest('.flow-node') : null;
+        
+        if (nodeEl) {
+            const nodeId = nodeEl.getAttribute('data-node-id');
+            const node = nodes.find(n => n.id === nodeId);
+            
+            if (node && node.id !== draggingConnection.from) {
+                if (!hoveredNode || hoveredNode.id !== node.id) {
+                    if (hoveredNode) {
+                        const prevEl = document.getElementById(hoveredNode.id);
+                        if (prevEl) prevEl.classList.remove('hover-target');
+                    }
+                    
+                    hoveredNode = node;
+                    nodeEl.classList.add('hover-target');
+                }
+            }
+        } else {
+            if (hoveredNode) {
+                const prevEl = document.getElementById(hoveredNode.id);
+                if (prevEl) prevEl.classList.remove('hover-target');
+                hoveredNode = null;
+            }
+        }
     } else if (isDragging && selectedNode) {
         const rect = canvasContainer.getBoundingClientRect();
         const x = (e.clientX - rect.left) / (currentZoom / 100) - dragOffset.x;
@@ -1064,6 +1203,40 @@ function handleCanvasMouseUp(e) {
     if (isPanning) {
         isPanning = false;
         canvasContainer.classList.remove('panning');
+        canvasContainer.style.cursor = '';
+    } else if (isDraggingArrowHead && draggingConnection) {
+        // Finalizar arrastre de cabeza de flecha
+        const rect = canvasContainer.getBoundingClientRect();
+        const mouseX = (e.clientX - rect.left - panOffset.x) / (currentZoom / 100);
+        const mouseY = (e.clientY - rect.top - panOffset.y) / (currentZoom / 100);
+        
+        if (hoveredNode && hoveredNode.id !== draggingConnection.from) {
+            // Reconectar a un nuevo nodo
+            const closestPoint = getClosestConnectionPoint(hoveredNode, mouseX, mouseY);
+            
+            if (closestPoint) {
+                draggingConnection.to = hoveredNode.id;
+                draggingConnection.toPosition = closestPoint;
+                renderConnection(draggingConnection);
+                markAsChanged();
+                saveToHistory();
+            }
+        } else {
+            // No hay nodo destino válido, eliminar la conexión
+            deleteConnection(draggingConnection.id);
+        }
+        
+        // Limpiar estado
+        if (hoveredNode) {
+            const hoveredEl = document.getElementById(hoveredNode.id);
+            if (hoveredEl) {
+                hoveredEl.classList.remove('hover-target');
+            }
+            hoveredNode = null;
+        }
+        
+        isDraggingArrowHead = false;
+        draggingConnection = null;
         canvasContainer.style.cursor = '';
     } else if (isDragging && selectedNode) {
         const nodeEl = document.getElementById(selectedNode.id);

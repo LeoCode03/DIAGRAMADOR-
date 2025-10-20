@@ -1,26 +1,24 @@
-/* ==================== VARIABLES Y CONFIGURACIÓN GLOBAL ==================== */
 :root {
-    /* Colores basados en #00C1BA (Turquesa) - Teoría de Color */
-    --primary-color: #00C1BA;           /* Turquesa - Color principal */
-    --primary-dark: #009B95;            /* Turquesa oscuro - Sombras */
-    --primary-light: #4DD4CE;           /* Turquesa claro - Highlights */
-    --primary-pale: #B3F0ED;            /* Turquesa muy claro - Fondos */
+    --primary-color: #00C1BA;
+    --primary-dark: #009B95;
+    --primary-light: #4DD4CE;
+    --primary-pale: #B3F0ED;
     
-    --secondary-color: #00A8D6;         /* Azul cyan - Análogo */
-    --accent-color: #00D4A8;            /* Verde agua - Análogo */
+    --secondary-color: #00A8D6;
+    --accent-color: #00D4A8;
     
-    --success-color: #00C9A7;           /* Verde turquesa - Éxito */
-    --warning-color: #FFB84D;           /* Naranja suave - Advertencia (complementario cálido) */
-    --danger-color: #FF6B6B;            /* Rojo coral - Error (complementario) */
-    --info-color: #4DD4E8;              /* Cyan claro - Información */
+    --success-color: #00C9A7;
+    --warning-color: #FFB84D;
+    --danger-color: #FF6B6B;
+    --info-color: #4DD4E8;
     
-    --text-dark: #2C3E50;               /* Gris azulado oscuro */
-    --text-light: #5A6C7D;              /* Gris azulado medio */
-    --text-muted: #95A5A6;              /* Gris azulado claro */
+    --text-dark: #2C3E50;
+    --text-light: #5A6C7D;
+    --text-muted: #95A5A6;
     
-    --border-color: #D1E9E7;            /* Gris verdoso claro */
-    --bg-light: #F0FFFE;                /* Fondo muy claro con tinte turquesa */
-    --bg-white: #FFFFFF;                /* Blanco puro */
+    --border-color: #D1E9E7;
+    --bg-light: #F0FFFE;
+    --bg-white: #FFFFFF;
     
     --node-size: 120px;
     --node-size-mobile: 100px;
@@ -37,7 +35,6 @@ body {
     overflow-x: hidden;
 }
 
-/* ==================== HEADER ==================== */
 .app-header {
     display: flex;
     align-items: center;
@@ -67,7 +64,6 @@ body {
     margin-right: 5px;
 }
 
-/* ==================== VISTA INICIAL ==================== */
 .empty-state {
     position: fixed;
     top: 50%;
@@ -210,7 +206,6 @@ body {
     color: white !important;
 }
 
-/* ==================== CANVAS HEADER ==================== */
 .canvas-header {
     position: sticky;
     top: 0;
@@ -268,14 +263,13 @@ body {
     color: var(--danger-color);
 }
 
-/* ==================== MENÚ DE NODOS ==================== */
 .menu-toggle-btn {
     position: fixed;
     left: 20px;
-    top: 100px;
+    top: 85px;
     z-index: 99;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .menu-toggle-btn.hidden {
@@ -322,7 +316,6 @@ body {
     cursor: grabbing;
 }
 
-/* Previsualizaciones de nodos en el sidebar */
 .node-preview {
     width: 45px;
     height: 45px;
@@ -362,16 +355,15 @@ body {
 }
 
 .node-preview.comentario::before {
-    background: linear-gradient(135deg, #16a085, #1abc9c);
+    background: linear-gradient(135deg, rgba(178, 172, 110, 0.6), rgba(178, 167, 62, 0.6));
     border-radius: 4px;
     clip-path: polygon(0% 0%, 85% 0%, 100% 15%, 100% 100%, 0% 100%);
 }
 
-/* ==================== CANVAS ==================== */
 .canvas-container {
     position: relative;
     width: 100%;
-    height: calc(100vh - 140px - 60px); /* altura total - header - footer */
+    height: calc(100vh - 140px - 60px);
     overflow: hidden;
     background: 
         linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px),
@@ -427,7 +419,6 @@ body {
     z-index: 2;
 }
 
-/* ==================== NODOS ==================== */
 .flow-node {
     position: absolute;
     width: var(--node-size);
@@ -447,7 +438,6 @@ body {
     position: relative;
 }
 
-/* Formas base para cada tipo de nodo */
 .flow-node::before {
     content: '';
     position: absolute;
@@ -459,44 +449,38 @@ body {
     border: 2px solid rgba(0, 0, 0, 0.1);
 }
 
-/* Inicio - Óvalo verde */
 .flow-node.inicio::before {
     background: linear-gradient(135deg, #27ae60, #2ecc71);
     border-radius: 50%;
 }
 
-/* Proceso - Rectángulo azul */
 .flow-node.asignacion::before {
     background: linear-gradient(135deg, #3498db, #5dade2);
     border-radius: 8px;
 }
 
-/* Decisión - Rombo amarillo/naranja */
 .flow-node.si {
     width: calc(var(--node-size) * 0.9);
     height: calc(var(--node-size) * 0.9);
 }
 
 .flow-node.si::before {
-    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    background: linear-gradient(135deg, #FFB366, #FFCC99);
     transform: rotate(45deg);
     border-radius: 8px;
 }
 
-/* Fin - Óvalo rojo */
 .flow-node.fin::before {
     background: linear-gradient(135deg, #e74c3c, #ec7063);
     border-radius: 50%;
 }
 
-/* Comentario - Rectángulo con esquina doblada cyan */
 .flow-node.comentario::before {
-    background: linear-gradient(135deg, #16a085, #1abc9c);
+    background: linear-gradient(135deg, rgba(178, 172, 110, 0.6), rgba(178, 167, 62, 0.6));
     border-radius: 4px;
     clip-path: polygon(0% 0%, 85% 0%, 100% 15%, 100% 100%, 0% 100%);
 }
 
-/* Ajuste específico del contenido del nodo si (por la rotación) */
 .flow-node.si .node-content {
     transform: none;
     z-index: 2;
@@ -549,6 +533,14 @@ body {
     text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
+.flow-node.comentario .node-content,
+.flow-node.asignacion .node-content,
+.flow-node.si .node-content {
+    color: #000000;
+    font-weight: bold;
+    text-shadow: none;
+}
+
 .node-content:empty:before {
     content: 'Texto...';
     color: rgba(255, 255, 255, 0.7);
@@ -581,7 +573,6 @@ body {
     filter: brightness(0) invert(1);
 }
 
-/* Botón de eliminar conexión */
 .connection-delete-btn {
     position: absolute;
     width: 30px;
@@ -608,7 +599,6 @@ body {
     transform: translate(-50%, -50%) scale(1.1);
 }
 
-/* Puntos de conexión */
 .connection-point {
     position: absolute;
     width: 16px;
@@ -624,7 +614,6 @@ body {
     pointer-events: all;
 }
 
-/* Mostrar puntos al hacer hover o cuando se selecciona el nodo */
 .flow-node:hover .connection-point,
 .flow-node.show-connection-points .connection-point,
 .flow-node.selected .connection-point {
@@ -676,7 +665,6 @@ body {
     transform: translateY(-50%) scale(1.3);
 }
 
-/* Destacar puntos de conexión cuando están en hover durante arrastre */
 .connection-point.connection-hover {
     display: block !important;
     box-shadow: 0 0 5px 2px var(--accent-color);
@@ -684,15 +672,13 @@ body {
     animation: pulse 1s infinite;
 }
 
-/* Animación para puntos de conexión en hover durante conexión */
 @keyframes pulse {
     0% { transform: scale(1.2) translate(-50%, -50%); box-shadow: 0 0 5px 2px var(--accent-color); }
     50% { transform: scale(1.4) translate(-50%, -50%); box-shadow: 0 0 10px 3px var(--accent-color); }
     100% { transform: scale(1.2) translate(-50%, -50%); box-shadow: 0 0 5px 2px var(--accent-color); }
 }
 
-/* Etiquetas de conexión para nodo de decisión */
-.connection-label-si {
+.connection-label {
     position: absolute;
     font-size: 0.75rem;
     font-weight: 600;
@@ -703,6 +689,47 @@ body {
     white-space: nowrap;
     pointer-events: none;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    z-index: 11;
+}
+
+.decision-label {
+    position: absolute;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    background: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 12;
+    display: block !important;
+    opacity: 1 !important;
+}
+
+.decision-label-yes {
+    right: -45px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.decision-label-no {
+    left: -45px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.connection-point.right .connection-label {
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.connection-point.left .connection-label {
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .connection-point.right .connection-label-si {
@@ -717,18 +744,6 @@ body {
     transform: translateY(-50%);
 }
 
-/* Etiquetas de conexión */
-.connection-label {
-    font-size: 0.85rem;
-    background: white;
-    padding: 2px 6px;
-    border: 1px solid var(--border-color);
-    border-radius: 3px;
-    pointer-events: all;
-    cursor: text;
-}
-
-/* ==================== FOOTER ==================== */
 .canvas-footer {
     position: fixed;
     bottom: 0;
@@ -768,7 +783,6 @@ body {
     text-align: center;
 }
 
-/* ==================== MODALES ==================== */
 .w3-modal {
     padding-top: 100px;
 }
@@ -778,7 +792,6 @@ body {
     overflow: hidden;
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
     :root {
         --node-size: var(--node-size-mobile);
@@ -857,7 +870,6 @@ body {
     }
 }
 
-/* ==================== UTILIDADES ==================== */
 .hidden {
     display: none !important;
 }
@@ -880,7 +892,6 @@ body {
     cursor: crosshair;
 }
 
-/* Animaciones */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -896,7 +907,6 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
-/* Accesibilidad */
 button:focus,
 input:focus {
     outline: 2px solid var(--primary-color);

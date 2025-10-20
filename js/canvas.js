@@ -1,10 +1,4 @@
-﻿/**
- * canvas.js - Sistema de Canvas para Diagramas de Flujo
- * SOLUCIÓN DEFINITIVA - Sistema sincronizado de SVG y DOM
- */
-
-// ==================== CONSTANTES ====================
-const NODE_WIDTH = 120;
+﻿const NODE_WIDTH = 120;
 const NODE_HEIGHT = 120;
 const GRID_SIZE = 20;
 const MAX_HISTORY = 50;
@@ -22,11 +16,10 @@ const DEFAULT_CONTENT = {
     inicio: 'Inicio',
     fin: 'Fin',
     asignacion: 'Asignación',
-    si: 'Condición',
+    si: 'Decisión',
     comentario: 'Comentario'
 };
 
-// ==================== ESTADO GLOBAL ====================
 const state = {
     currentDiagram: null,
     originalDiagramName: '',
@@ -50,7 +43,6 @@ const state = {
     historyIndex: -1
 };
 
-// Referencias DOM
 let dom = {
     nodeLayer: null,
     connectionLayer: null,
@@ -58,8 +50,6 @@ let dom = {
     diagramNameInput: null,
     saveStatus: null
 };
-
-// ==================== INICIALIZACIÓN ====================
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -106,8 +96,6 @@ function initDOMReferences() {
         throw new Error('No se encontraron elementos del canvas');
     }
 }
-
-// ==================== CARGA Y GUARDADO ====================
 
 async function loadDiagram(id) {
     try {
@@ -201,7 +189,6 @@ function updateSaveStatus(status) {
     dom.saveStatus.className = 'save-status ' + status;
 }
 
-// ==================== GESTIÓN DE NODOS ====================
 
 function createNode(type, x, y, content = '') {
     state.nodeCounter++;
@@ -209,8 +196,8 @@ function createNode(type, x, y, content = '') {
     const node = {
         id: `node-${state.nodeCounter}`,
         type: type,
-        x: Math.round(x / GRID_SIZE) * GRID_SIZE,
-        y: Math.round(y / GRID_SIZE) * GRID_SIZE,
+        x: x,
+        y: y,
         content: content || DEFAULT_CONTENT[type] || ''
     };
     
@@ -244,7 +231,6 @@ function renderNode(node) {
     nodeEl.style.left = node.x + 'px';
     nodeEl.style.top = node.y + 'px';
     
-    // Guardar las dimensiones del nodo para cálculos posteriores
     if (node.type === 'si') {
         nodeEl.setAttribute('data-width', NODE_WIDTH * 0.9);
         nodeEl.setAttribute('data-height', NODE_HEIGHT * 0.9);
@@ -255,29 +241,31 @@ function renderNode(node) {
     
     const contentEl = document.createElement('div');
     contentEl.className = 'node-content';
-    contentEl.contentEditable = true;
+    contentEl.contentEditable = (node.type !== 'inicio' && node.type !== 'fin');
     contentEl.textContent = node.content;
     contentEl.setAttribute('spellcheck', 'false');
     
-    contentEl.addEventListener('input', (e) => {
-        node.content = e.target.textContent;
-        markAsChanged();
-    });
-    
-    contentEl.addEventListener('blur', () => {
-        if (!contentEl.textContent.trim()) {
-            contentEl.textContent = DEFAULT_CONTENT[node.type] || '';
-            node.content = contentEl.textContent;
-        }
-    });
-    
-    contentEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            contentEl.blur();
-        }
-        e.stopPropagation();
-    });
+    if (node.type !== 'inicio' && node.type !== 'fin') {
+        contentEl.addEventListener('input', (e) => {
+            node.content = e.target.textContent;
+            markAsChanged();
+        });
+        
+        contentEl.addEventListener('blur', () => {
+            if (!contentEl.textContent.trim()) {
+                contentEl.textContent = DEFAULT_CONTENT[node.type] || '';
+                node.content = contentEl.textContent;
+            }
+        });
+        
+        contentEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                contentEl.blur();
+            }
+            e.stopPropagation();
+        });
+    }
     
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'node-delete-btn';
@@ -287,22 +275,33 @@ function renderNode(node) {
         deleteNode(node.id);
     });
     
-    const positions = ['top', 'right', 'bottom', 'left'];
+    const positions = node.type === 'si' ? ['top', 'right', 'left'] : ['top', 'right', 'bottom', 'left'];
     positions.forEach(pos => {
         const point = document.createElement('div');
         point.className = `connection-point ${pos}`;
+        
         point.addEventListener('mousedown', (e) => handleConnectionStart(e, node, pos));
         point.addEventListener('touchstart', (e) => handleConnectionStart(e, node, pos));
         nodeEl.appendChild(point);
     });
     
-    // Mostrar puntos de conexión al hacer hover
+    if (node.type === 'si') {
+        const labelSi = document.createElement('div');
+        labelSi.className = 'decision-label decision-label-yes';
+        labelSi.textContent = 'Sí';
+        nodeEl.appendChild(labelSi);
+        
+        const labelNo = document.createElement('div');
+        labelNo.className = 'decision-label decision-label-no';
+        labelNo.textContent = 'No';
+        nodeEl.appendChild(labelNo);
+    }
+    
     nodeEl.addEventListener('mouseenter', () => {
         nodeEl.classList.add('show-connection-points');
     });
     
     nodeEl.addEventListener('mouseleave', () => {
-        // Solo ocultar si no estamos conectando desde este nodo
         if (!state.isConnecting || (state.connectionStart && state.connectionStart.node.id !== node.id)) {
             nodeEl.classList.remove('show-connection-points');
         }
@@ -345,8 +344,6 @@ function renderAllNodes() {
     state.nodes.forEach(node => renderNode(node));
 }
 
-// ==================== GESTIÓN DE CONEXIONES - SOLUCIÓN CORRECTA ====================
-
 function createConnection(fromNodeId, fromPos, toNodeId, toPos) {
     const exists = state.connections.some(c => 
         c.from === fromNodeId && 
@@ -367,7 +364,6 @@ function createConnection(fromNodeId, fromPos, toNodeId, toPos) {
     
     state.connectionCounter++;
     
-    // Calcular y guardar los offsets relativos al crear la conexión
     const fromNode = state.nodes.find(n => n.id === fromNodeId);
     const toNode = state.nodes.find(n => n.id === toNodeId);
     
@@ -380,7 +376,6 @@ function createConnection(fromNodeId, fromPos, toNodeId, toPos) {
         to: toNodeId,
         fromPosition: fromPos,
         toPosition: toPos,
-        // Guardar offsets relativos para uso posterior
         fromOffset: {
             x: fromPoint.x - fromNode.x,
             y: fromPoint.y - fromNode.y
@@ -406,11 +401,9 @@ function renderConnection(connection) {
     
     if (!fromNode || !toNode) return;
     
-    // Usar los offsets guardados si existen, sino calcular normalmente
     let fromPoint, toPoint;
     
     if (connection.fromOffset && connection.toOffset) {
-        // Usar offsets relativos (mantiene la conexión exacta al mover)
         fromPoint = {
             x: fromNode.x + connection.fromOffset.x,
             y: fromNode.y + connection.fromOffset.y
@@ -420,7 +413,6 @@ function renderConnection(connection) {
             y: toNode.y + connection.toOffset.y
         };
     } else {
-        // Fallback para conexiones antiguas sin offsets
         fromPoint = getConnectionPoint(fromNode, connection.fromPosition);
         toPoint = getConnectionPoint(toNode, connection.toPosition);
     }
@@ -429,24 +421,48 @@ function renderConnection(connection) {
     let path = document.getElementById(pathId);
     
     if (!path) {
+        const hitPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        hitPath.id = `hit-${pathId}`;
+        hitPath.style.fill = 'none';
+        hitPath.style.stroke = 'transparent';
+        hitPath.style.strokeWidth = '20px';
+        hitPath.style.cursor = 'pointer';
+        hitPath.style.pointerEvents = 'stroke';
+        hitPath.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectConnection(connection);
+        });
+        
         path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.id = pathId;
         path.setAttribute('data-connection-id', connection.id);
         path.setAttribute('marker-end', 'url(#arrowhead)');
         path.style.fill = 'none';
         path.style.cursor = 'pointer';
+        path.style.pointerEvents = 'none';
         
-        path.addEventListener('click', () => selectConnection(connection));
-        
+        dom.connectionLayer.appendChild(hitPath);
         dom.connectionLayer.appendChild(path);
     }
     
     const pathData = createCurvedPath(fromPoint, toPoint);
     path.setAttribute('d', pathData);
     
+    const hitPath = document.getElementById(`hit-${pathId}`);
+    if (hitPath) {
+        hitPath.setAttribute('d', pathData);
+    }
+    
     const strokeWidth = 2 / (state.currentZoom / 100);
     path.style.stroke = '#2C3E50';
     path.style.strokeWidth = strokeWidth + 'px';
+    
+    if (fromNode.type === 'comentario' || toNode.type === 'comentario') {
+        const dashSize = 5 / (state.currentZoom / 100);
+        path.style.strokeDasharray = `${dashSize} ${dashSize}`;
+    } else {
+        path.style.strokeDasharray = 'none';
+    }
 }
 
 function deleteConnection(connectionId) {
@@ -455,6 +471,11 @@ function deleteConnection(connectionId) {
     const path = document.getElementById(`path-${connectionId}`);
     if (path) {
         path.remove();
+    }
+    
+    const hitPath = document.getElementById(`hit-path-${connectionId}`);
+    if (hitPath) {
+        hitPath.remove();
     }
     
     const deleteBtn = document.getElementById(`delete-${connectionId}`);
@@ -485,7 +506,6 @@ function updateNodeConnections(nodeId) {
         if (conn.from === nodeId || conn.to === nodeId) {
             renderConnection(conn);
             
-            // Actualizar botón de eliminar si esta conexión está seleccionada
             if (state.selectedConnection && state.selectedConnection.id === conn.id) {
                 showConnectionDeleteButton(conn);
             }
@@ -494,20 +514,16 @@ function updateNodeConnections(nodeId) {
 }
 
 function getConnectionPoint(node, position) {
-    // Obtener la posición real del nodo desde el DOM
     const nodeEl = document.getElementById(node.id);
     if (nodeEl) {
-        // Sincronizar las coordenadas del estado con el DOM
         const left = parseInt(nodeEl.style.left) || node.x;
         const top = parseInt(nodeEl.style.top) || node.y;
         node.x = left;
         node.y = top;
         
-        // Obtener las dimensiones del nodo
         const nodeWidth = parseFloat(nodeEl.getAttribute('data-width')) || NODE_WIDTH;
         const nodeHeight = parseFloat(nodeEl.getAttribute('data-height')) || NODE_HEIGHT;
         
-        // Calcular el punto de conexión basado en la geometría
         switch (position) {
             case 'top': 
                 return { x: node.x + nodeWidth / 2, y: node.y };
@@ -520,7 +536,6 @@ function getConnectionPoint(node, position) {
         }
     }
 
-    // Fallback si no encontramos el elemento
     console.warn('No se encontró el nodo, usando fallback geométrico');
     let nodeWidth = node.type === 'si' ? NODE_WIDTH * 0.9 : NODE_WIDTH;
     let nodeHeight = node.type === 'si' ? NODE_HEIGHT * 0.9 : NODE_HEIGHT;
@@ -535,7 +550,6 @@ function getConnectionPoint(node, position) {
     return { x: node.x + nodeWidth / 2, y: node.y + nodeHeight / 2 };
 }
 
-// Nueva función para obtener el punto exacto del DOM (solo al crear conexión)
 function getConnectionPointFromDOM(node, position) {
     const nodeEl = document.getElementById(node.id);
     if (nodeEl) {
@@ -544,11 +558,9 @@ function getConnectionPointFromDOM(node, position) {
             const rect = pointEl.getBoundingClientRect();
             const containerRect = dom.canvasContainer.getBoundingClientRect();
             
-            // Centro del círculo de conexión
             const screenX = rect.left + rect.width / 2;
             const screenY = rect.top + rect.height / 2;
             
-            // Convertir coordenadas de pantalla a coordenadas del canvas
             const scale = state.currentZoom / 100;
             const canvasX = (screenX - containerRect.left - state.panOffset.x) / scale;
             const canvasY = (screenY - containerRect.top - state.panOffset.y) / scale;
@@ -557,7 +569,6 @@ function getConnectionPointFromDOM(node, position) {
         }
     }
     
-    // Fallback a cálculo geométrico
     return getConnectionPoint(node, position);
 }
 
@@ -566,20 +577,17 @@ function createCurvedPath(from, to) {
     const dy = to.y - from.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // Determinar la dirección predominante
     const isHorizontal = Math.abs(dx) > Math.abs(dy);
     const curvature = Math.min(distance / 3, 100);
     
     let cp1x, cp1y, cp2x, cp2y;
     
     if (isHorizontal) {
-        // Movimiento principalmente horizontal
         cp1x = from.x + curvature * Math.sign(dx);
         cp1y = from.y;
         cp2x = to.x - curvature * Math.sign(dx);
         cp2y = to.y;
     } else {
-        // Movimiento principalmente vertical
         cp1x = from.x;
         cp1y = from.y + curvature * Math.sign(dy);
         cp2x = to.x;
@@ -611,8 +619,21 @@ function showConnectionDeleteButton(connection) {
     
     if (!fromNode || !toNode) return;
     
-    const fromPoint = getConnectionPoint(fromNode, connection.fromPosition);
-    const toPoint = getConnectionPoint(toNode, connection.toPosition);
+    let fromPoint, toPoint;
+    
+    if (connection.fromOffset && connection.toOffset) {
+        fromPoint = {
+            x: fromNode.x + connection.fromOffset.x,
+            y: fromNode.y + connection.fromOffset.y
+        };
+        toPoint = {
+            x: toNode.x + connection.toOffset.x,
+            y: toNode.y + connection.toOffset.y
+        };
+    } else {
+        fromPoint = getConnectionPoint(fromNode, connection.fromPosition);
+        toPoint = getConnectionPoint(toNode, connection.toPosition);
+    }
     
     const midX = (fromPoint.x + toPoint.x) / 2;
     const midY = (fromPoint.y + toPoint.y) / 2;
@@ -622,12 +643,13 @@ function showConnectionDeleteButton(connection) {
     btn.innerHTML = '×';
     btn.style.left = midX + 'px';
     btn.style.top = midY + 'px';
-    btn.onclick = () => deleteConnection(connection.id);
+    btn.onclick = () => {
+        deleteConnection(connection.id);
+        deselectAll();
+    };
     
     dom.nodeLayer.appendChild(btn);
 }
-
-// ==================== EVENTOS DE INTERACCIÓN ====================
 
 function setupEventListeners() {
     dom.canvasContainer.addEventListener('mousedown', handleCanvasMouseDown);
@@ -653,7 +675,6 @@ function handleCanvasMouseDown(e) {
     if (e.target === dom.canvasContainer || e.target === dom.nodeLayer) {
         deselectAll();
         
-        // Permitir pan arrastrando con clic izquierdo (sin necesidad de Shift)
         if (e.button === 0) {
             state.isPanning = true;
             state.panStart.x = e.clientX - state.panOffset.x;
@@ -675,8 +696,8 @@ function handleCanvasMouseMove(e) {
         const x = (e.clientX - rect.left) / scale - state.panOffset.x / scale - state.dragOffset.x;
         const y = (e.clientY - rect.top) / scale - state.panOffset.y / scale - state.dragOffset.y;
         
-        state.selectedNode.x = Math.round(x / GRID_SIZE) * GRID_SIZE;
-        state.selectedNode.y = Math.round(y / GRID_SIZE) * GRID_SIZE;
+        state.selectedNode.x = x;
+        state.selectedNode.y = y;
         
         renderNode(state.selectedNode);
         updateNodeConnections(state.selectedNode.id);
@@ -748,7 +769,6 @@ function handleConnectionStart(e, node, position) {
     e.preventDefault();
     
     if (state.isConnecting && state.connectionStart) {
-        // Segundo clic - finalizar conexión
         if (state.connectionStart.node.id !== node.id) {
             createConnection(
                 state.connectionStart.node.id,
@@ -758,7 +778,6 @@ function handleConnectionStart(e, node, position) {
             );
         }
         
-        // Limpiar estado y ocultar puntos del nodo de origen
         const originNodeEl = document.getElementById(state.connectionStart.node.id);
         if (originNodeEl) {
             originNodeEl.classList.remove('show-connection-points');
@@ -770,12 +789,10 @@ function handleConnectionStart(e, node, position) {
         dom.canvasContainer.style.cursor = '';
         
     } else {
-        // Primer clic - iniciar conexión
         state.isConnecting = true;
         state.connectionStart = { node, position };
         dom.canvasContainer.style.cursor = 'crosshair';
         
-        // Mantener visible los puntos del nodo de origen
         const nodeEl = document.getElementById(node.id);
         if (nodeEl) {
             nodeEl.classList.add('show-connection-points');
@@ -799,7 +816,7 @@ function drawTemporaryConnection(e) {
         dom.connectionLayer.appendChild(tempPath);
     }
     
-    const fromPoint = getConnectionPoint(
+    const fromPoint = getConnectionPointFromDOM(
         state.connectionStart.node,
         state.connectionStart.position
     );
@@ -842,8 +859,8 @@ function handleCanvasTouchMove(e) {
         const x = (touch.clientX - rect.left) / scale - state.panOffset.x / scale - state.dragOffset.x;
         const y = (touch.clientY - rect.top) / scale - state.panOffset.y / scale - state.dragOffset.y;
         
-        state.selectedNode.x = Math.round(x / GRID_SIZE) * GRID_SIZE;
-        state.selectedNode.y = Math.round(y / GRID_SIZE) * GRID_SIZE;
+        state.selectedNode.x = x;
+        state.selectedNode.y = y;
         
         renderNode(state.selectedNode);
         updateNodeConnections(state.selectedNode.id);
@@ -862,9 +879,13 @@ function handleCanvasWheel(e) {
     e.preventDefault();
     
     const delta = e.deltaY > 0 ? -10 : 10;
-    const newZoom = Math.min(250, Math.max(50, state.currentZoom + delta));
+    const newZoom = Math.min(250, Math.max(15, state.currentZoom + delta));
     
-    applyZoom(newZoom);
+    const rect = dom.canvasContainer.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    applyZoomAtPoint(newZoom, mouseX, mouseY);
     markAsChanged();
 }
 
@@ -882,8 +903,14 @@ function handleDrop(e) {
     const rect = dom.canvasContainer.getBoundingClientRect();
     const scale = state.currentZoom / 100;
     
-    const x = (e.clientX - rect.left) / scale - state.panOffset.x / scale - NODE_WIDTH / 2;
-    const y = (e.clientY - rect.top) / scale - state.panOffset.y / scale - NODE_HEIGHT / 2;
+    const cursorX = (e.clientX - rect.left - state.panOffset.x) / scale;
+    const cursorY = (e.clientY - rect.top - state.panOffset.y) / scale;
+    
+    const nodeWidth = nodeType === 'si' ? NODE_WIDTH * 0.9 : NODE_WIDTH;
+    const nodeHeight = nodeType === 'si' ? NODE_HEIGHT * 0.9 : NODE_HEIGHT;
+    
+    const x = cursorX - nodeWidth / 2;
+    const y = cursorY - nodeHeight / 2;
     
     createNode(nodeType, x, y);
 }
@@ -920,8 +947,6 @@ function deselectAll() {
     if (deleteBtn) deleteBtn.remove();
 }
 
-// ==================== MENÚ DE NODOS ====================
-
 function setupNodeMenu() {
     const menuBtn = document.getElementById('btnMenu');
     const menu = document.getElementById('nodeMenu');
@@ -930,6 +955,12 @@ function setupNodeMenu() {
     menuBtn.addEventListener('click', () => {
         const isVisible = menu.style.display === 'block';
         menu.style.display = isVisible ? 'none' : 'block';
+        
+        if (menu.style.display === 'block') {
+            menuBtn.classList.add('hidden');
+        } else {
+            menuBtn.classList.remove('hidden');
+        }
     });
     
     nodeItems.forEach(item => {
@@ -937,6 +968,11 @@ function setupNodeMenu() {
             const nodeType = item.getAttribute('data-node-type');
             e.dataTransfer.setData('nodeType', nodeType);
             e.dataTransfer.effectAllowed = 'copy';
+            
+            const rect = item.getBoundingClientRect();
+            const offsetX = rect.width / 2;
+            const offsetY = rect.height / 2;
+            e.dataTransfer.setDragImage(item, offsetX, offsetY);
         });
         
         item.addEventListener('click', () => {
@@ -948,8 +984,15 @@ function setupNodeMenu() {
 
 function toggleNodeMenu() {
     const menu = document.getElementById('nodeMenu');
+    const menuBtn = document.getElementById('btnMenu');
     const isVisible = menu.style.display === 'block';
     menu.style.display = isVisible ? 'none' : 'block';
+    
+    if (menu.style.display === 'block') {
+        menuBtn.classList.add('hidden');
+    } else {
+        menuBtn.classList.remove('hidden');
+    }
 }
 
 function addNodeAtCenter(nodeType) {
@@ -962,13 +1005,10 @@ function addNodeAtCenter(nodeType) {
     createNode(nodeType, centerX, centerY);
 }
 
-// ==================== CONTROLES DE ZOOM ====================
-
 function setupZoomControls() {
     const zoomSlider = document.getElementById('zoomSlider');
     const btnZoomIn = document.getElementById('btnZoomIn');
     const btnZoomOut = document.getElementById('btnZoomOut');
-    const btnFitView = document.getElementById('btnFitView');
     const btnUndo = document.getElementById('btnUndo');
     const btnRedo = document.getElementById('btnRedo');
     
@@ -990,17 +1030,40 @@ function setupZoomControls() {
         markAsChanged();
     });
     
-    btnFitView.addEventListener('click', () => {
-        fitToView();
-        markAsChanged();
-    });
-    
     btnUndo.addEventListener('click', undo);
     btnRedo.addEventListener('click', redo);
 }
 
 function applyZoom(zoom) {
-    state.currentZoom = Math.min(250, Math.max(50, zoom));
+    state.currentZoom = Math.min(250, Math.max(15, zoom));
+    
+    const scale = state.currentZoom / 100;
+    const transform = `translate(${state.panOffset.x}px, ${state.panOffset.y}px) scale(${scale})`;
+    
+    dom.nodeLayer.style.transform = transform;
+    dom.nodeLayer.style.transformOrigin = '0 0';
+    
+    dom.connectionLayer.style.transform = transform;
+    dom.connectionLayer.style.transformOrigin = '0 0';
+    
+    document.getElementById('zoomSlider').value = state.currentZoom;
+    document.getElementById('zoomValue').textContent = state.currentZoom + '%';
+    
+    renderAllConnections();
+}
+
+function applyZoomAtPoint(newZoom, focalX, focalY) {
+    const oldZoom = state.currentZoom;
+    const oldScale = oldZoom / 100;
+    const newScale = newZoom / 100;
+    
+    const canvasX = (focalX - state.panOffset.x) / oldScale;
+    const canvasY = (focalY - state.panOffset.y) / oldScale;
+    
+    state.currentZoom = Math.min(250, Math.max(15, newZoom));
+    
+    state.panOffset.x = focalX - canvasX * newScale;
+    state.panOffset.y = focalY - canvasY * newScale;
     
     const scale = state.currentZoom / 100;
     const transform = `translate(${state.panOffset.x}px, ${state.panOffset.y}px) scale(${scale})`;
@@ -1063,8 +1126,6 @@ function fitToView() {
     applyZoom(state.currentZoom);
 }
 
-// ==================== HISTORIAL ====================
-
 function saveToHistory() {
     const snapshot = {
         nodes: JSON.parse(JSON.stringify(state.nodes)),
@@ -1111,8 +1172,6 @@ function restoreState(snapshot) {
     markAsChanged();
 }
 
-// ==================== ATAJOS DE TECLADO ====================
-
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', handleKeyDown);
 }
@@ -1124,7 +1183,6 @@ function handleKeyDown(e) {
     
     if (e.key === 'Escape') {
         if (state.isConnecting) {
-            // Ocultar puntos del nodo de origen
             if (state.connectionStart) {
                 const originNodeEl = document.getElementById(state.connectionStart.node.id);
                 if (originNodeEl) {
@@ -1174,8 +1232,6 @@ function handleKeyDown(e) {
         markAsChanged();
     }
 }
-
-// ==================== UTILIDADES ====================
 
 function renderAll() {
     renderAllNodes();

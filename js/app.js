@@ -1,25 +1,13 @@
-/**
- * app.js
- * Lógica principal para la vista inicial (index.html)
- */
-
-// Estado global
 let diagrams = [];
 
-/**
- * Inicialización de la aplicación
- */
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         showLoader('Iniciando aplicación...');
         
-        // Inicializar almacenamiento
         await initStorage();
         
-        // Cargar diagramas
         await loadDiagrams();
         
-        // Configurar event listeners
         setupEventListeners();
         
         hideLoader();
@@ -30,9 +18,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-/**
- * Carga todos los diagramas
- */
 async function loadDiagrams() {
     try {
         diagrams = await listDiagrams();
@@ -43,27 +28,20 @@ async function loadDiagrams() {
     }
 }
 
-/**
- * Renderiza la lista de diagramas
- */
 function renderDiagrams() {
     const emptyState = document.getElementById('emptyState');
     const diagramList = document.getElementById('diagramList');
     const container = document.getElementById('diagramsContainer');
     
     if (diagrams.length === 0) {
-        // Mostrar estado vacío
         emptyState.style.display = 'flex';
         diagramList.style.display = 'none';
     } else {
-        // Mostrar lista
         emptyState.style.display = 'none';
         diagramList.style.display = 'block';
         
-        // Limpiar contenedor
         container.innerHTML = '';
         
-        // Renderizar cada diagrama
         diagrams.forEach(diagram => {
             const card = createDiagramCard(diagram);
             container.appendChild(card);
@@ -71,9 +49,6 @@ function renderDiagrams() {
     }
 }
 
-/**
- * Crea una tarjeta de diagrama
- */
 function createDiagramCard(diagram) {
     const card = document.createElement('div');
     card.className = 'diagram-card fade-in';
@@ -110,11 +85,7 @@ function createDiagramCard(diagram) {
     return card;
 }
 
-/**
- * Configura los event listeners
- */
 function setupEventListeners() {
-    // Botones de crear diagrama
     const btnCreateDiagram = document.getElementById('btnCreateDiagram');
     const btnCreateDiagramEmpty = document.getElementById('btnCreateDiagramEmpty');
     
@@ -126,7 +97,6 @@ function setupEventListeners() {
         btnCreateDiagramEmpty.addEventListener('click', handleCreateDiagram);
     }
     
-    // Botón de importar
     const btnImport = document.getElementById('btnImportDiagram');
     const fileInput = document.getElementById('fileInput');
     
@@ -140,20 +110,14 @@ function setupEventListeners() {
         fileInput.addEventListener('change', handleFileImport);
     }
     
-    // Prevenir cierre del modal al hacer clic fuera
     const confirmModal = document.getElementById('confirmModal');
     if (confirmModal) {
         confirmModal.addEventListener('click', (event) => {
-            // No hacer nada si se hace clic en el fondo del modal
-            // Solo cerrar con los botones explícitos
             event.stopPropagation();
         });
     }
 }
 
-/**
- * Maneja la creación de un nuevo diagrama
- */
 async function handleCreateDiagram() {
     try {
         showLoader('Creando diagrama...');
@@ -163,7 +127,6 @@ async function handleCreateDiagram() {
         hideLoader();
         showNotification('Diagrama creado correctamente', 'success', 2000);
         
-        // Navegar al canvas
         window.location.href = `canvas.html?id=${diagram._id}`;
     } catch (error) {
         hideLoader();
@@ -172,16 +135,10 @@ async function handleCreateDiagram() {
     }
 }
 
-/**
- * Abre un diagrama existente
- */
 function openDiagram(id) {
     window.location.href = `canvas.html?id=${id}`;
 }
 
-/**
- * Confirma la eliminación de un diagrama
- */
 function confirmDeleteDiagram(id, name, rev) {
     showConfirmModal(
         `¿Está seguro que desea eliminar el diagrama "${name}"? Esta acción no se puede deshacer.`,
@@ -189,16 +146,12 @@ function confirmDeleteDiagram(id, name, rev) {
     );
 }
 
-/**
- * Elimina un diagrama por su ID
- */
 async function deleteDiagramById(id, rev) {
     try {
         showLoader('Eliminando diagrama...');
         
         await deleteDiagram(id, rev);
         
-        // Recargar lista
         await loadDiagrams();
         
         hideLoader();
@@ -210,14 +163,10 @@ async function deleteDiagramById(id, rev) {
     }
 }
 
-/**
- * Maneja la importación de archivos
- */
 async function handleFileImport(event) {
     const file = event.target.files[0];
     if (!file) return;
     
-    // Verificar que sea un archivo JSON
     if (!file.name.endsWith('.json')) {
         showNotification('Por favor seleccione un archivo JSON válido', 'error');
         return;
@@ -228,7 +177,6 @@ async function handleFileImport(event) {
         
         const content = await readFileContent(file);
         
-        // Intentar parsear el JSON
         let diagram;
         try {
             diagram = JSON.parse(content);
@@ -236,11 +184,9 @@ async function handleFileImport(event) {
             throw new Error('El archivo no contiene JSON válido');
         }
         
-        // Verificar si ya existe
         const exists = await diagramExists(diagram._id);
         
         if (exists) {
-            // Preguntar al usuario qué hacer
             hideLoader();
             showOptionsDialog(
                 'Diagrama existente',
@@ -266,14 +212,12 @@ async function handleFileImport(event) {
                 }
             );
         } else {
-            // No existe, importar directamente
             await importDiagram(content, 'create');
             await loadDiagrams();
             hideLoader();
             showNotification('Diagrama importado correctamente', 'success');
         }
         
-        // Limpiar input
         event.target.value = '';
     } catch (error) {
         hideLoader();
@@ -283,9 +227,6 @@ async function handleFileImport(event) {
     }
 }
 
-/**
- * Lee el contenido de un archivo
- */
 function readFileContent(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -295,16 +236,9 @@ function readFileContent(file) {
     });
 }
 
-/**
- * Maneja la advertencia antes de salir con cambios sin guardar
- */
 window.addEventListener('beforeunload', (event) => {
-    // Esta función se puede extender si se necesita verificar cambios pendientes
-    // Por ahora no es necesario en la vista inicial
 });
 
-// Verificar si se llegó desde el canvas para mostrar mensaje
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('from') === 'canvas') {
-    // Opcional: mostrar algún mensaje o animación
 }

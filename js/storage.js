@@ -1,8 +1,3 @@
-/**
- * storage.js
- * Gestión de persistencia de diagramas con PouchDB y fallback a localStorage
- */
-
 const SCHEMA_VERSION = '1.0.0';
 const STORAGE_KEY_PREFIX = 'diagramador_';
 const STORAGE_LIST_KEY = STORAGE_KEY_PREFIX + 'list';
@@ -10,15 +5,10 @@ const STORAGE_LIST_KEY = STORAGE_KEY_PREFIX + 'list';
 let db = null;
 let useLocalStorage = false;
 
-/**
- * Inicializa la base de datos
- * Intenta usar PouchDB, si falla usa localStorage
- */
 async function initStorage() {
     try {
         if (typeof PouchDB !== 'undefined') {
             db = new PouchDB('diagramas');
-            // Verificar que funciona
             await db.info();
             console.log('PouchDB inicializado correctamente');
             useLocalStorage = false;
@@ -31,16 +21,10 @@ async function initStorage() {
     }
 }
 
-/**
- * Crea un nuevo diagrama
- * @param {string} name - Nombre del diagrama
- * @returns {Promise<Object>} - Documento del diagrama creado
- */
 async function createDiagram(name = 'Diagrama') {
     const timestamp = Date.now();
     const id = 'd-' + timestamp;
     
-    // Verificar si el nombre ya existe y ajustarlo
     const existingNames = await getAllDiagramNames();
     let finalName = name;
     let counter = 1;
@@ -80,19 +64,11 @@ async function createDiagram(name = 'Diagrama') {
     }
 }
 
-/**
- * Obtiene todos los nombres de diagramas existentes
- */
 async function getAllDiagramNames() {
     const diagrams = await listDiagrams();
     return diagrams.map(d => d.name);
 }
 
-/**
- * Obtiene un diagrama por su ID
- * @param {string} id - ID del diagrama
- * @returns {Promise<Object>} - Documento del diagrama
- */
 async function getDiagram(id) {
     if (useLocalStorage) {
         return getFromLocalStorage(id);
@@ -106,11 +82,6 @@ async function getDiagram(id) {
     }
 }
 
-/**
- * Actualiza un diagrama existente
- * @param {Object} diagram - Documento del diagrama a actualizar
- * @returns {Promise<Object>} - Documento actualizado
- */
 async function updateDiagram(diagram) {
     diagram.updatedAt = Date.now();
     
@@ -128,12 +99,6 @@ async function updateDiagram(diagram) {
     }
 }
 
-/**
- * Elimina un diagrama
- * @param {string} id - ID del diagrama
- * @param {string} rev - Revisión del documento (solo para PouchDB)
- * @returns {Promise<boolean>} - true si se eliminó correctamente
- */
 async function deleteDiagram(id, rev) {
     if (useLocalStorage) {
         return deleteFromLocalStorage(id);
@@ -148,10 +113,6 @@ async function deleteDiagram(id, rev) {
     }
 }
 
-/**
- * Lista todos los diagramas
- * @returns {Promise<Array>} - Array de diagramas ordenados por fecha de actualización
- */
 async function listDiagrams() {
     if (useLocalStorage) {
         return listFromLocalStorage();
@@ -175,16 +136,9 @@ async function listDiagrams() {
     }
 }
 
-/**
- * Exporta un diagrama a JSON
- * @param {string} id - ID del diagrama
- * @returns {Promise<string>} - JSON del diagrama
- */
 async function exportDiagram(id) {
     const diagram = await getDiagram(id);
     
-    // Crear copia limpia sin propiedades internas de PouchDB
-    // Excluimos 'type' y 'schemaVersion' de la exportación
     const exportData = {
         _id: diagram._id,
         name: diagram.name,
@@ -198,22 +152,14 @@ async function exportDiagram(id) {
     return JSON.stringify(exportData, null, 2);
 }
 
-/**
- * Importa un diagrama desde JSON
- * @param {string} jsonString - String JSON del diagrama
- * @param {string} mode - 'create', 'replace' o 'cancel'
- * @returns {Promise<Object>} - Diagrama importado
- */
 async function importDiagram(jsonString, mode = 'create') {
     try {
         const diagram = JSON.parse(jsonString);
         
-        // Validar estructura
         if (!validateDiagramSchema(diagram)) {
             throw new Error('El archivo JSON no tiene un formato válido');
         }
         
-        // Agregar propiedades necesarias si no existen
         if (!diagram.type) {
             diagram.type = 'diagram';
         }
@@ -221,7 +167,6 @@ async function importDiagram(jsonString, mode = 'create') {
             diagram.schemaVersion = 1;
         }
         
-        // Verificar si ya existe
         const exists = await diagramExists(diagram._id);
         
         if (exists && mode === 'cancel') {
@@ -229,22 +174,18 @@ async function importDiagram(jsonString, mode = 'create') {
         }
         
         if (exists && mode === 'replace') {
-            // Obtener el documento existente para tener el _rev
             const existing = await getDiagram(diagram._id);
             diagram._rev = existing._rev;
             return await updateDiagram(diagram);
         }
         
-        // mode === 'create' o no existe
         if (exists || mode === 'create') {
-            // Crear una copia con nuevo ID
             const timestamp = Date.now();
             diagram._id = 'd-' + timestamp;
             diagram.createdAt = timestamp;
             diagram.updatedAt = timestamp;
             delete diagram._rev;
             
-            // Ajustar nombre si ya existe
             const existingNames = await getAllDiagramNames();
             let finalName = diagram.name;
             let counter = 1;
@@ -269,9 +210,6 @@ async function importDiagram(jsonString, mode = 'create') {
     }
 }
 
-/**
- * Verifica si un diagrama existe
- */
 async function diagramExists(id) {
     try {
         await getDiagram(id);
@@ -281,9 +219,6 @@ async function diagramExists(id) {
     }
 }
 
-/**
- * Valida el esquema de un diagrama
- */
 function validateDiagramSchema(diagram) {
     return diagram &&
         diagram._id &&
@@ -295,17 +230,10 @@ function validateDiagramSchema(diagram) {
         diagram.metadata;
 }
 
-// ==================== FUNCIONES DE LOCALSTORAGE ====================
-
-/**
- * Guarda un diagrama en localStorage
- */
 function saveToLocalStorage(diagram) {
     try {
-        // Guardar el diagrama
         localStorage.setItem(STORAGE_KEY_PREFIX + diagram._id, JSON.stringify(diagram));
         
-        // Actualizar la lista de IDs
         const list = getListFromLocalStorage();
         if (!list.includes(diagram._id)) {
             list.push(diagram._id);
@@ -319,9 +247,6 @@ function saveToLocalStorage(diagram) {
     }
 }
 
-/**
- * Obtiene un diagrama de localStorage
- */
 function getFromLocalStorage(id) {
     try {
         const data = localStorage.getItem(STORAGE_KEY_PREFIX + id);
@@ -335,14 +260,10 @@ function getFromLocalStorage(id) {
     }
 }
 
-/**
- * Elimina un diagrama de localStorage
- */
 function deleteFromLocalStorage(id) {
     try {
         localStorage.removeItem(STORAGE_KEY_PREFIX + id);
         
-        // Actualizar la lista
         let list = getListFromLocalStorage();
         list = list.filter(item => item !== id);
         localStorage.setItem(STORAGE_LIST_KEY, JSON.stringify(list));
@@ -354,9 +275,6 @@ function deleteFromLocalStorage(id) {
     }
 }
 
-/**
- * Lista todos los diagramas de localStorage
- */
 function listFromLocalStorage() {
     try {
         const list = getListFromLocalStorage();
@@ -378,9 +296,6 @@ function listFromLocalStorage() {
     }
 }
 
-/**
- * Obtiene la lista de IDs de localStorage
- */
 function getListFromLocalStorage() {
     try {
         const data = localStorage.getItem(STORAGE_LIST_KEY);
@@ -390,11 +305,6 @@ function getListFromLocalStorage() {
     }
 }
 
-// ==================== UTILIDADES ====================
-
-/**
- * Descarga un archivo JSON
- */
 function downloadJSON(filename, content) {
     const blob = new Blob([content], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -407,9 +317,6 @@ function downloadJSON(filename, content) {
     URL.revokeObjectURL(url);
 }
 
-/**
- * Formatea una fecha en formato legible
- */
 function formatDate(timestamp) {
     const date = new Date(timestamp);
     const day = String(date.getDate()).padStart(2, '0');
@@ -421,9 +328,6 @@ function formatDate(timestamp) {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
-/**
- * Genera un nombre de archivo para exportación
- */
 function generateExportFilename(diagramName) {
     const date = new Date();
     const dateStr = date.toISOString().split('T')[0];

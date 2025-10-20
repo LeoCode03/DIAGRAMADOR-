@@ -1,16 +1,4 @@
-/**
- * ui.js
- * Utilidades para interfaz de usuario: modales, alertas y confirmaciones
- */
-
-/**
- * Muestra una notificación temporal en la parte superior de la pantalla
- * @param {string} message - Mensaje a mostrar
- * @param {string} type - Tipo: 'success', 'error', 'warning', 'info'
- * @param {number} duration - Duración en ms (por defecto 3000)
- */
 function showNotification(message, type = 'info', duration = 3000) {
-    // Crear el contenedor de notificaciones si no existe
     let container = document.getElementById('notificationContainer');
     if (!container) {
         container = document.createElement('div');
@@ -28,11 +16,9 @@ function showNotification(message, type = 'info', duration = 3000) {
         document.body.appendChild(container);
     }
     
-    // Crear la notificación
     const notification = document.createElement('div');
     notification.className = `w3-card w3-padding w3-animate-top`;
     
-    // Colores según el tipo (usando paleta personalizada)
     const colors = {
         success: { bg: '#00C9A7', text: 'white' },
         error: { bg: '#FF6B6B', text: 'white' },
@@ -61,7 +47,6 @@ function showNotification(message, type = 'info', duration = 3000) {
     
     container.appendChild(notification);
     
-    // Auto-eliminar después de la duración especificada
     if (duration > 0) {
         setTimeout(() => {
             if (notification.parentElement) {
@@ -74,12 +59,6 @@ function showNotification(message, type = 'info', duration = 3000) {
     return notification;
 }
 
-/**
- * Muestra un modal de confirmación
- * @param {string} message - Mensaje de confirmación
- * @param {Function} onConfirm - Callback al confirmar
- * @param {Function} onCancel - Callback al cancelar
- */
 function showConfirmModal(message, onConfirm, onCancel = null) {
     const modal = document.getElementById('confirmModal');
     if (!modal) {
@@ -93,13 +72,11 @@ function showConfirmModal(message, onConfirm, onCancel = null) {
     
     messageEl.textContent = message;
     
-    // Limpiar eventos anteriores
     const newBtnYes = btnYes.cloneNode(true);
     const newBtnNo = btnNo.cloneNode(true);
     btnYes.parentNode.replaceChild(newBtnYes, btnYes);
     btnNo.parentNode.replaceChild(newBtnNo, btnNo);
     
-    // Asignar nuevos eventos
     newBtnYes.addEventListener('click', () => {
         closeConfirmModal();
         if (onConfirm) onConfirm();
@@ -113,9 +90,6 @@ function showConfirmModal(message, onConfirm, onCancel = null) {
     modal.style.display = 'block';
 }
 
-/**
- * Cierra el modal de confirmación
- */
 function closeConfirmModal() {
     const modal = document.getElementById('confirmModal');
     if (modal) {
@@ -123,15 +97,7 @@ function closeConfirmModal() {
     }
 }
 
-/**
- * Muestra un modal personalizado
- * @param {string} title - Título del modal
- * @param {string} content - Contenido HTML del modal
- * @param {Array} buttons - Array de objetos {text, class, onClick}
- * @param {boolean} showCloseButton - Mostrar botón X de cerrar (default: true)
- */
 function showCustomModal(title, content, buttons = [], showCloseButton = true) {
-    // Crear modal si no existe
     let modal = document.getElementById('customModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -153,13 +119,11 @@ function showCustomModal(title, content, buttons = [], showCloseButton = true) {
     document.getElementById('customModalTitle').textContent = title;
     document.getElementById('customModalContent').innerHTML = content;
     
-    // Mostrar u ocultar botón de cerrar
     const closeBtn = document.getElementById('customModalCloseBtn');
     if (closeBtn) {
         closeBtn.style.display = showCloseButton ? 'block' : 'none';
     }
     
-    // Agregar botones
     const buttonsContainer = document.getElementById('customModalButtons');
     buttonsContainer.innerHTML = '';
     
@@ -183,9 +147,6 @@ function showCustomModal(title, content, buttons = [], showCloseButton = true) {
     modal.style.display = 'block';
 }
 
-/**
- * Cierra el modal personalizado
- */
 function closeCustomModal() {
     const modal = document.getElementById('customModal');
     if (modal) {
@@ -193,10 +154,6 @@ function closeCustomModal() {
     }
 }
 
-/**
- * Muestra un loader/spinner
- * @param {string} message - Mensaje opcional
- */
 function showLoader(message = 'Cargando...') {
     let loader = document.getElementById('appLoader');
     if (!loader) {
@@ -229,9 +186,6 @@ function showLoader(message = 'Cargando...') {
     return loader;
 }
 
-/**
- * Oculta el loader
- */
 function hideLoader() {
     const loader = document.getElementById('appLoader');
     if (loader) {
@@ -239,13 +193,6 @@ function hideLoader() {
     }
 }
 
-/**
- * Muestra un diálogo de selección de opciones
- * @param {string} title - Título
- * @param {string} message - Mensaje
- * @param {Array} options - Array de {text, value, class}
- * @param {Function} onSelect - Callback(value)
- */
 function showOptionsDialog(title, message, options, onSelect) {
     const content = `
         <p>${message}</p>
@@ -261,7 +208,6 @@ function showOptionsDialog(title, message, options, onSelect) {
         </div>
     `;
     
-    // Guardar callback temporalmente
     window._optionsDialogCallback = (index) => {
         if (onSelect && options[index]) {
             onSelect(options[index].value);
@@ -269,25 +215,15 @@ function showOptionsDialog(title, message, options, onSelect) {
         closeCustomModal();
     };
     
-    // No agregamos botones adicionales porque las opciones ya incluyen "Cancelar"
-    // No mostramos el botón X porque ya hay un botón "Cancelar" explícito
     showCustomModal(title, content, [], false);
 }
 
-/**
- * Función auxiliar para seleccionar opción
- */
 function selectOption(index) {
     if (window._optionsDialogCallback) {
         window._optionsDialogCallback(index);
     }
 }
 
-/**
- * Valida que los datos del formulario sean correctos
- * @param {HTMLFormElement} form - Formulario a validar
- * @returns {boolean} - true si es válido
- */
 function validateForm(form) {
     const inputs = form.querySelectorAll('[required]');
     let isValid = true;
@@ -304,12 +240,6 @@ function validateForm(form) {
     return isValid;
 }
 
-/**
- * Función debounce para limitar la frecuencia de ejecución
- * @param {Function} func - Función a ejecutar
- * @param {number} wait - Tiempo de espera en ms
- * @returns {Function} - Función debounced
- */
 function debounce(func, wait = 300) {
     let timeout;
     return function executedFunction(...args) {
@@ -322,12 +252,6 @@ function debounce(func, wait = 300) {
     };
 }
 
-/**
- * Función throttle para limitar ejecuciones
- * @param {Function} func - Función a ejecutar
- * @param {number} limit - Límite en ms
- * @returns {Function} - Función throttled
- */
 function throttle(func, limit = 100) {
     let inThrottle;
     return function(...args) {
@@ -339,16 +263,11 @@ function throttle(func, limit = 100) {
     };
 }
 
-/**
- * Copia texto al portapapeles
- * @param {string} text - Texto a copiar
- */
 async function copyToClipboard(text) {
     try {
         await navigator.clipboard.writeText(text);
         showNotification('Copiado al portapapeles', 'success', 2000);
     } catch (error) {
-        // Fallback para navegadores antiguos
         const textarea = document.createElement('textarea');
         textarea.value = text;
         textarea.style.position = 'fixed';
@@ -365,24 +284,15 @@ async function copyToClipboard(text) {
     }
 }
 
-/**
- * Detecta si es un dispositivo móvil
- * @returns {boolean}
- */
 function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
         || window.innerWidth < 768;
 }
 
-/**
- * Detecta si soporta eventos táctiles
- * @returns {boolean}
- */
 function isTouchDevice() {
     return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 }
 
-// Agregar animación de fadeOut al CSS si no existe
 if (!document.getElementById('uiAnimations')) {
     const style = document.createElement('style');
     style.id = 'uiAnimations';

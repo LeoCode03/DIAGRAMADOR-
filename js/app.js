@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Carga la lista de diagramas desde el almacenamiento
 async function loadDiagrams() {
     try {
         diagrams = await listDiagrams();
@@ -28,6 +29,7 @@ async function loadDiagrams() {
     }
 }
 
+// Renderiza todos los diagramas en la interfaz
 function renderDiagrams() {
     const emptyState = document.getElementById('emptyState');
     const diagramList = document.getElementById('diagramList');
@@ -49,6 +51,7 @@ function renderDiagrams() {
     }
 }
 
+// Crea una tarjeta visual para mostrar un diagrama
 function createDiagramCard(diagram) {
     const card = document.createElement('div');
     card.className = 'diagram-card fade-in';
@@ -85,6 +88,7 @@ function createDiagramCard(diagram) {
     return card;
 }
 
+// Configura los event listeners de la página principal
 function setupEventListeners() {
     const btnCreateDiagram = document.getElementById('btnCreateDiagram');
     const btnCreateDiagramEmpty = document.getElementById('btnCreateDiagramEmpty');
@@ -118,6 +122,7 @@ function setupEventListeners() {
     }
 }
 
+//[event-listener] Crea un nuevo diagrama y redirige al editor
 async function handleCreateDiagram() {
     try {
         showLoader('Creando diagrama...');
@@ -135,10 +140,12 @@ async function handleCreateDiagram() {
     }
 }
 
+// Abre un diagrama en el editor
 function openDiagram(id) {
     window.location.href = `canvas.html?id=${id}`;
 }
 
+// Muestra el modal de confirmación para eliminar un diagrama
 function confirmDeleteDiagram(id, name, rev) {
     showConfirmModal(
         `¿Está seguro que desea eliminar el diagrama "${name}"? Esta acción no se puede deshacer.`,
@@ -146,6 +153,7 @@ function confirmDeleteDiagram(id, name, rev) {
     );
 }
 
+// Elimina un diagrama del almacenamiento
 async function deleteDiagramById(id, rev) {
     try {
         showLoader('Eliminando diagrama...');
@@ -163,6 +171,7 @@ async function deleteDiagramById(id, rev) {
     }
 }
 
+//[event-listener] Maneja la importación de un archivo de diagrama
 async function handleFileImport(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -227,6 +236,7 @@ async function handleFileImport(event) {
     }
 }
 
+// Lee el contenido de un archivo como texto
 function readFileContent(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();

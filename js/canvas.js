@@ -85,6 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Inicializa las referencias del DOM
 function initDOMReferences() {
     dom.nodeLayer = document.getElementById('nodeLayer');
     dom.connectionLayer = document.getElementById('connectionLayer');
@@ -97,6 +98,7 @@ function initDOMReferences() {
     }
 }
 
+// Carga un diagrama desde el almacenamiento
 async function loadDiagram(id) {
     try {
         const diagram = await getDiagram(id);
@@ -134,6 +136,7 @@ async function loadDiagram(id) {
     }
 }
 
+// Guarda el diagrama actual en el almacenamiento
 async function saveDiagram() {
     if (!state.currentDiagram) return;
     
@@ -173,11 +176,13 @@ const autoSave = debounce(async () => {
     }
 }, AUTO_SAVE_DELAY);
 
+// Marca el diagrama como modificado y activa el auto-guardado
 function markAsChanged() {
     state.hasUnsavedChanges = true;
     autoSave();
 }
 
+// Actualiza el indicador visual del estado de guardado
 function updateSaveStatus(status) {
     const messages = {
         saving: 'Guardando...',
@@ -189,7 +194,7 @@ function updateSaveStatus(status) {
     dom.saveStatus.className = 'save-status ' + status;
 }
 
-
+// Crea un nuevo nodo en el canvas
 function createNode(type, x, y, content = '') {
     state.nodeCounter++;
     
@@ -210,6 +215,7 @@ function createNode(type, x, y, content = '') {
     return node;
 }
 
+// Renderiza un nodo en el DOM
 function renderNode(node) {
     let nodeEl = document.getElementById(node.id);
     
@@ -317,6 +323,7 @@ function renderNode(node) {
     return nodeEl;
 }
 
+// Elimina un nodo y sus conexiones asociadas
 function deleteNode(nodeId) {
     state.nodes = state.nodes.filter(n => n.id !== nodeId);
     
@@ -339,11 +346,13 @@ function deleteNode(nodeId) {
     markAsChanged();
 }
 
+// Renderiza todos los nodos en el canvas
 function renderAllNodes() {
     dom.nodeLayer.innerHTML = '';
     state.nodes.forEach(node => renderNode(node));
 }
 
+// Crea una nueva conexión entre dos nodos
 function createConnection(fromNodeId, fromPos, toNodeId, toPos) {
     const exists = state.connections.some(c => 
         c.from === fromNodeId && 
@@ -395,6 +404,7 @@ function createConnection(fromNodeId, fromPos, toNodeId, toPos) {
     return connection;
 }
 
+// Renderiza una conexión en el canvas SVG
 function renderConnection(connection) {
     const fromNode = state.nodes.find(n => n.id === connection.from);
     const toNode = state.nodes.find(n => n.id === connection.to);
@@ -465,6 +475,7 @@ function renderConnection(connection) {
     }
 }
 
+// Elimina una conexión del canvas y del estado
 function deleteConnection(connectionId) {
     state.connections = state.connections.filter(c => c.id !== connectionId);
     
@@ -491,6 +502,7 @@ function deleteConnection(connectionId) {
     markAsChanged();
 }
 
+// Renderiza todas las conexiones en el canvas
 function renderAllConnections() {
     const defs = dom.connectionLayer.querySelector('defs');
     dom.connectionLayer.innerHTML = '';
@@ -501,6 +513,7 @@ function renderAllConnections() {
     state.connections.forEach(conn => renderConnection(conn));
 }
 
+// Actualiza las conexiones de un nodo específico
 function updateNodeConnections(nodeId) {
     state.connections.forEach(conn => {
         if (conn.from === nodeId || conn.to === nodeId) {
@@ -513,6 +526,7 @@ function updateNodeConnections(nodeId) {
     });
 }
 
+// Calcula el punto de conexión en un nodo según la posición especificada
 function getConnectionPoint(node, position) {
     const nodeEl = document.getElementById(node.id);
     if (nodeEl) {
@@ -550,6 +564,7 @@ function getConnectionPoint(node, position) {
     return { x: node.x + nodeWidth / 2, y: node.y + nodeHeight / 2 };
 }
 
+// Obtiene el punto de conexión exacto desde el DOM del nodo
 function getConnectionPointFromDOM(node, position) {
     const nodeEl = document.getElementById(node.id);
     if (nodeEl) {
@@ -572,6 +587,7 @@ function getConnectionPointFromDOM(node, position) {
     return getConnectionPoint(node, position);
 }
 
+// Crea una curva Bézier para las conexiones entre nodos
 function createCurvedPath(from, to) {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -597,6 +613,7 @@ function createCurvedPath(from, to) {
     return `M ${from.x} ${from.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${to.x} ${to.y}`;
 }
 
+// Selecciona una conexión y muestra el botón de eliminación
 function selectConnection(connection) {
     deselectAll();
     
@@ -610,6 +627,7 @@ function selectConnection(connection) {
     showConnectionDeleteButton(connection);
 }
 
+// Muestra el botón de eliminación en el punto medio de la conexión
 function showConnectionDeleteButton(connection) {
     const oldBtn = document.querySelector('.connection-delete-btn');
     if (oldBtn) oldBtn.remove();
@@ -651,6 +669,7 @@ function showConnectionDeleteButton(connection) {
     dom.nodeLayer.appendChild(btn);
 }
 
+// Configura todos los event listeners del canvas
 function setupEventListeners() {
     dom.canvasContainer.addEventListener('mousedown', handleCanvasMouseDown);
     dom.canvasContainer.addEventListener('mousemove', handleCanvasMouseMove);
@@ -671,6 +690,7 @@ function setupEventListeners() {
     window.addEventListener('beforeunload', handleBeforeUnload);
 }
 
+//[event-listener] Maneja el evento mousedown en el canvas para iniciar paneo
 function handleCanvasMouseDown(e) {
     if (e.target === dom.canvasContainer || e.target === dom.nodeLayer) {
         deselectAll();
@@ -684,6 +704,7 @@ function handleCanvasMouseDown(e) {
     }
 }
 
+//[event-listener] Maneja el movimiento del mouse en el canvas
 function handleCanvasMouseMove(e) {
     if (state.isPanning) {
         state.panOffset.x = e.clientX - state.panStart.x;
@@ -706,6 +727,7 @@ function handleCanvasMouseMove(e) {
     }
 }
 
+//[event-listener] Maneja el evento mouseup para finalizar paneo y arrastre
 function handleCanvasMouseUp(e) {
     if (state.isPanning) {
         state.isPanning = false;
@@ -724,6 +746,7 @@ function handleCanvasMouseUp(e) {
     }
 }
 
+//[event-listener] Inicia el arrastre de un nodo
 function handleNodeMouseDown(e, node) {
     if (e.target.classList.contains('node-content')) {
         return;
@@ -746,6 +769,7 @@ function handleNodeMouseDown(e, node) {
     }
 }
 
+//[event-listener] Maneja el evento touch para iniciar arrastre en dispositivos táctiles
 function handleNodeTouchStart(e, node) {
     if (e.target.classList.contains('node-content')) {
         return;
@@ -764,6 +788,7 @@ function handleNodeTouchStart(e, node) {
     state.dragOffset.y = (touch.clientY - rect.top) / scale - state.panOffset.y / scale - node.y;
 }
 
+//[event-listener] Inicia o completa la creación de una conexión entre nodos
 function handleConnectionStart(e, node, position) {
     e.stopPropagation();
     e.preventDefault();
@@ -800,6 +825,7 @@ function handleConnectionStart(e, node, position) {
     }
 }
 
+// Dibuja una conexión temporal mientras se crea una nueva conexión
 function drawTemporaryConnection(e) {
     if (!state.connectionStart) return;
     
@@ -835,6 +861,7 @@ function drawTemporaryConnection(e) {
     tempPath.style.strokeWidth = strokeWidth + 'px';
 }
 
+// Elimina la conexión temporal del canvas
 function removeTemporaryConnection() {
     const tempPath = document.getElementById('temp-connection');
     if (tempPath) {
@@ -842,12 +869,14 @@ function removeTemporaryConnection() {
     }
 }
 
+//[event-listener] Maneja el evento touchstart en el canvas
 function handleCanvasTouchStart(e) {
     if (e.target === dom.canvasContainer || e.target === dom.nodeLayer) {
         deselectAll();
     }
 }
 
+//[event-listener] Maneja el movimiento táctil para arrastrar nodos
 function handleCanvasTouchMove(e) {
     if (state.isDragging && state.selectedNode && e.touches.length === 1) {
         e.preventDefault();
@@ -867,6 +896,7 @@ function handleCanvasTouchMove(e) {
     }
 }
 
+//[event-listener] Finaliza el arrastre táctil y guarda cambios
 function handleCanvasTouchEnd(e) {
     if (state.isDragging) {
         state.isDragging = false;
@@ -875,6 +905,7 @@ function handleCanvasTouchEnd(e) {
     }
 }
 
+//[event-listener] Maneja el zoom con la rueda del mouse
 function handleCanvasWheel(e) {
     e.preventDefault();
     
@@ -889,11 +920,13 @@ function handleCanvasWheel(e) {
     markAsChanged();
 }
 
+//[event-listener] Permite el evento dragover para activar el drop
 function handleDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
 }
 
+//[event-listener] Maneja el drop de nodos en el canvas
 function handleDrop(e) {
     e.preventDefault();
     
@@ -915,6 +948,7 @@ function handleDrop(e) {
     createNode(nodeType, x, y);
 }
 
+// Selecciona un nodo y deselecciona los demás
 function selectNode(node) {
     deselectAll();
     
@@ -926,6 +960,7 @@ function selectNode(node) {
     }
 }
 
+// Deselecciona todos los nodos y conexiones
 function deselectAll() {
     if (state.selectedNode) {
         const nodeEl = document.getElementById(state.selectedNode.id);
@@ -947,6 +982,7 @@ function deselectAll() {
     if (deleteBtn) deleteBtn.remove();
 }
 
+// Configura el menú de nodos arrastrables
 function setupNodeMenu() {
     const menuBtn = document.getElementById('btnMenu');
     const menu = document.getElementById('nodeMenu');
@@ -982,6 +1018,7 @@ function setupNodeMenu() {
     });
 }
 
+// Alterna la visibilidad del menú de nodos
 function toggleNodeMenu() {
     const menu = document.getElementById('nodeMenu');
     const menuBtn = document.getElementById('btnMenu');
@@ -995,6 +1032,7 @@ function toggleNodeMenu() {
     }
 }
 
+// Añade un nodo en el centro del canvas visible
 function addNodeAtCenter(nodeType) {
     const rect = dom.canvasContainer.getBoundingClientRect();
     const scale = state.currentZoom / 100;
@@ -1005,6 +1043,7 @@ function addNodeAtCenter(nodeType) {
     createNode(nodeType, centerX, centerY);
 }
 
+// Configura los controles de zoom y deshacer/rehacer
 function setupZoomControls() {
     const zoomSlider = document.getElementById('zoomSlider');
     const btnZoomIn = document.getElementById('btnZoomIn');
@@ -1034,6 +1073,7 @@ function setupZoomControls() {
     btnRedo.addEventListener('click', redo);
 }
 
+// Aplica el nivel de zoom especificado al canvas
 function applyZoom(zoom) {
     state.currentZoom = Math.min(250, Math.max(15, zoom));
     
@@ -1052,6 +1092,7 @@ function applyZoom(zoom) {
     renderAllConnections();
 }
 
+// Aplica zoom centrado en un punto específico de la pantalla
 function applyZoomAtPoint(newZoom, focalX, focalY) {
     const oldZoom = state.currentZoom;
     const oldScale = oldZoom / 100;
@@ -1080,6 +1121,7 @@ function applyZoomAtPoint(newZoom, focalX, focalY) {
     renderAllConnections();
 }
 
+// Ajusta el zoom para mostrar todos los nodos en pantalla
 function fitToView() {
     if (state.nodes.length === 0) {
         applyZoom(100);
@@ -1126,6 +1168,7 @@ function fitToView() {
     applyZoom(state.currentZoom);
 }
 
+// Guarda el estado actual en el historial para deshacer/rehacer
 function saveToHistory() {
     const snapshot = {
         nodes: JSON.parse(JSON.stringify(state.nodes)),
@@ -1144,6 +1187,7 @@ function saveToHistory() {
     }
 }
 
+// Deshace la última acción realizada
 function undo() {
     if (state.historyIndex > 0) {
         state.historyIndex--;
@@ -1152,6 +1196,7 @@ function undo() {
     }
 }
 
+// Rehace la última acción deshecha
 function redo() {
     if (state.historyIndex < state.history.length - 1) {
         state.historyIndex++;
@@ -1160,6 +1205,7 @@ function redo() {
     }
 }
 
+// Restaura un estado previo desde el historial
 function restoreState(snapshot) {
     state.nodes = JSON.parse(JSON.stringify(snapshot.nodes));
     state.connections = JSON.parse(JSON.stringify(snapshot.connections));
@@ -1172,10 +1218,12 @@ function restoreState(snapshot) {
     markAsChanged();
 }
 
+// Configura los atajos de teclado del canvas
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', handleKeyDown);
 }
 
+// Maneja los eventos de teclado para atajos
 function handleKeyDown(e) {
     if (e.target.classList.contains('node-content') || e.target.tagName === 'INPUT') {
         return;
@@ -1233,11 +1281,13 @@ function handleKeyDown(e) {
     }
 }
 
+// Renderiza todos los elementos del canvas
 function renderAll() {
     renderAllNodes();
     renderAllConnections();
 }
 
+//[event-listener] Maneja la pérdida de foco del input del nombre del diagrama
 function handleNameBlur() {
     const newName = dom.diagramNameInput.value.trim();
     
@@ -1259,11 +1309,13 @@ function handleNameBlur() {
     };
 }
 
+// Cancela el cambio de nombre del diagrama
 function cancelNameChange() {
     dom.diagramNameInput.value = state.originalDiagramName;
     document.getElementById('nameModal').style.display = 'none';
 }
 
+//[event-listener] Maneja el click en el botón de volver al inicio
 function handleGoHome(e) {
     e.preventDefault();
     
@@ -1283,6 +1335,7 @@ function handleGoHome(e) {
     }
 }
 
+//[event-listener] Descarga el diagrama actual como archivo JSON
 async function handleDownload() {
     try {
         await saveDiagram();
@@ -1299,6 +1352,7 @@ async function handleDownload() {
     }
 }
 
+//[event-listener] Alerta al usuario antes de cerrar si hay cambios sin guardar
 function handleBeforeUnload(e) {
     if (state.hasUnsavedChanges) {
         e.preventDefault();

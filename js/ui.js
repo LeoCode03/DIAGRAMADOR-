@@ -1,3 +1,4 @@
+// Muestra una notificación temporal en la pantalla
 function showNotification(message, type = 'info', duration = 3000) {
     let container = document.getElementById('notificationContainer');
     if (!container) {
@@ -59,6 +60,7 @@ function showNotification(message, type = 'info', duration = 3000) {
     return notification;
 }
 
+// Muestra un modal de confirmación con botones Sí/No
 function showConfirmModal(message, onConfirm, onCancel = null) {
     const modal = document.getElementById('confirmModal');
     if (!modal) {
@@ -90,6 +92,7 @@ function showConfirmModal(message, onConfirm, onCancel = null) {
     modal.style.display = 'block';
 }
 
+// Cierra el modal de confirmación
 function closeConfirmModal() {
     const modal = document.getElementById('confirmModal');
     if (modal) {
@@ -97,6 +100,7 @@ function closeConfirmModal() {
     }
 }
 
+// Muestra un modal personalizable con título, contenido y botones
 function showCustomModal(title, content, buttons = [], showCloseButton = true) {
     let modal = document.getElementById('customModal');
     if (!modal) {
@@ -147,6 +151,7 @@ function showCustomModal(title, content, buttons = [], showCloseButton = true) {
     modal.style.display = 'block';
 }
 
+// Cierra el modal personalizado
 function closeCustomModal() {
     const modal = document.getElementById('customModal');
     if (modal) {
@@ -154,6 +159,7 @@ function closeCustomModal() {
     }
 }
 
+// Muestra un indicador de carga con mensaje
 function showLoader(message = 'Cargando...') {
     let loader = document.getElementById('appLoader');
     if (!loader) {
@@ -186,6 +192,7 @@ function showLoader(message = 'Cargando...') {
     return loader;
 }
 
+// Oculta el indicador de carga
 function hideLoader() {
     const loader = document.getElementById('appLoader');
     if (loader) {
@@ -193,6 +200,7 @@ function hideLoader() {
     }
 }
 
+// Muestra un diálogo con opciones múltiples
 function showOptionsDialog(title, message, options, onSelect) {
     const content = `
         <p>${message}</p>
@@ -218,12 +226,14 @@ function showOptionsDialog(title, message, options, onSelect) {
     showCustomModal(title, content, [], false);
 }
 
+// Maneja la selección de una opción en el diálogo
 function selectOption(index) {
     if (window._optionsDialogCallback) {
         window._optionsDialogCallback(index);
     }
 }
 
+// Valida que los campos requeridos de un formulario estén completos
 function validateForm(form) {
     const inputs = form.querySelectorAll('[required]');
     let isValid = true;
@@ -240,6 +250,7 @@ function validateForm(form) {
     return isValid;
 }
 
+// Retrasa la ejecución de una función hasta que pasen N milisegundos sin llamadas
 function debounce(func, wait = 300) {
     let timeout;
     return function executedFunction(...args) {
@@ -252,6 +263,7 @@ function debounce(func, wait = 300) {
     };
 }
 
+// Limita la frecuencia de ejecución de una función
 function throttle(func, limit = 100) {
     let inThrottle;
     return function(...args) {
@@ -263,6 +275,7 @@ function throttle(func, limit = 100) {
     };
 }
 
+// Copia texto al portapapeles del sistema
 async function copyToClipboard(text) {
     try {
         await navigator.clipboard.writeText(text);
@@ -282,40 +295,4 @@ async function copyToClipboard(text) {
         }
         document.body.removeChild(textarea);
     }
-}
-
-function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
-        || window.innerWidth < 768;
-}
-
-function isTouchDevice() {
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-}
-
-if (!document.getElementById('uiAnimations')) {
-    const style = document.createElement('style');
-    style.id = 'uiAnimations';
-    style.textContent = `
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-        }
-        
-        .w3-spin {
-            animation: w3-spin 1s linear infinite;
-        }
-        
-        @keyframes w3-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    `;
-    document.head.appendChild(style);
 }

@@ -5,6 +5,7 @@ const STORAGE_LIST_KEY = STORAGE_KEY_PREFIX + 'list';
 let db = null;
 let useLocalStorage = false;
 
+// Inicializa el sistema de almacenamiento
 async function initStorage() {
     try {
         if (typeof PouchDB !== 'undefined') {
@@ -21,6 +22,7 @@ async function initStorage() {
     }
 }
 
+// Crea un nuevo diagrama con un nombre único
 async function createDiagram(name = 'Diagrama') {
     const timestamp = Date.now();
     const id = 'd-' + timestamp;
@@ -64,11 +66,13 @@ async function createDiagram(name = 'Diagrama') {
     }
 }
 
+// Obtiene los nombres de todos los diagramas existentes
 async function getAllDiagramNames() {
     const diagrams = await listDiagrams();
     return diagrams.map(d => d.name);
 }
 
+// Recupera un diagrama por su ID
 async function getDiagram(id) {
     if (useLocalStorage) {
         return getFromLocalStorage(id);
@@ -82,6 +86,7 @@ async function getDiagram(id) {
     }
 }
 
+// Actualiza un diagrama existente
 async function updateDiagram(diagram) {
     diagram.updatedAt = Date.now();
     
@@ -99,6 +104,7 @@ async function updateDiagram(diagram) {
     }
 }
 
+// Elimina un diagrama del almacenamiento
 async function deleteDiagram(id, rev) {
     if (useLocalStorage) {
         return deleteFromLocalStorage(id);
@@ -113,6 +119,7 @@ async function deleteDiagram(id, rev) {
     }
 }
 
+// Obtiene la lista de todos los diagramas
 async function listDiagrams() {
     if (useLocalStorage) {
         return listFromLocalStorage();
@@ -136,6 +143,7 @@ async function listDiagrams() {
     }
 }
 
+// Exporta un diagrama como JSON
 async function exportDiagram(id) {
     const diagram = await getDiagram(id);
     
@@ -152,6 +160,7 @@ async function exportDiagram(id) {
     return JSON.stringify(exportData, null, 2);
 }
 
+// Importa un diagrama desde JSON
 async function importDiagram(jsonString, mode = 'create') {
     try {
         const diagram = JSON.parse(jsonString);
@@ -210,6 +219,7 @@ async function importDiagram(jsonString, mode = 'create') {
     }
 }
 
+// Verifica si existe un diagrama con el ID especificado
 async function diagramExists(id) {
     try {
         await getDiagram(id);
@@ -219,6 +229,7 @@ async function diagramExists(id) {
     }
 }
 
+// Valida que un objeto tenga el esquema correcto de diagrama
 function validateDiagramSchema(diagram) {
     return diagram &&
         diagram._id &&
@@ -230,6 +241,7 @@ function validateDiagramSchema(diagram) {
         diagram.metadata;
 }
 
+// Guarda un diagrama en localStorage
 function saveToLocalStorage(diagram) {
     try {
         localStorage.setItem(STORAGE_KEY_PREFIX + diagram._id, JSON.stringify(diagram));
@@ -247,6 +259,7 @@ function saveToLocalStorage(diagram) {
     }
 }
 
+// Recupera un diagrama desde localStorage
 function getFromLocalStorage(id) {
     try {
         const data = localStorage.getItem(STORAGE_KEY_PREFIX + id);
@@ -260,6 +273,7 @@ function getFromLocalStorage(id) {
     }
 }
 
+// Elimina un diagrama de localStorage
 function deleteFromLocalStorage(id) {
     try {
         localStorage.removeItem(STORAGE_KEY_PREFIX + id);
@@ -275,6 +289,7 @@ function deleteFromLocalStorage(id) {
     }
 }
 
+// Obtiene todos los diagramas de localStorage
 function listFromLocalStorage() {
     try {
         const list = getListFromLocalStorage();
@@ -296,6 +311,7 @@ function listFromLocalStorage() {
     }
 }
 
+// Obtiene la lista de IDs de diagramas desde localStorage
 function getListFromLocalStorage() {
     try {
         const data = localStorage.getItem(STORAGE_LIST_KEY);
@@ -305,6 +321,7 @@ function getListFromLocalStorage() {
     }
 }
 
+// Descarga un archivo JSON con el contenido especificado
 function downloadJSON(filename, content) {
     const blob = new Blob([content], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -317,6 +334,7 @@ function downloadJSON(filename, content) {
     URL.revokeObjectURL(url);
 }
 
+// Formatea un timestamp como fecha legible
 function formatDate(timestamp) {
     const date = new Date(timestamp);
     const day = String(date.getDate()).padStart(2, '0');
@@ -328,6 +346,7 @@ function formatDate(timestamp) {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
+// Genera un nombre de archivo para exportación
 function generateExportFilename(diagramName) {
     const date = new Date();
     const dateStr = date.toISOString().split('T')[0];
